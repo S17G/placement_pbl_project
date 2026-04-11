@@ -9,6 +9,8 @@ const env = {
   port: Number(process.env.PORT || 5000),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   mongodbUri: process.env.MONGODB_URI || '',
+  enableInMemoryMongo:
+    String(process.env.ENABLE_IN_MEMORY_MONGO || 'true').toLowerCase() === 'true',
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || 'unsafe-default-secret',
   jwtAccessExpiry: process.env.JWT_ACCESS_EXPIRY || '1d',
   jwtCookieName: process.env.JWT_COOKIE_NAME || 'pm_access_token',
