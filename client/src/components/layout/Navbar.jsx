@@ -1,10 +1,37 @@
-import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import http from '../../api/http'
+
+const TAB_SEEN_AT_KEY = 'pmStudentTabSeenAt'
+const STUDENT_BADGE_TABS = [
+  { key: 'discussion', to: '/discussion', endpoint: '/v1/discussion', dateField: 'postedAt' },
+  { key: 'faq', to: '/faq', endpoint: '/v1/faq', dateField: 'postedAt' },
+  { key: 'resumes', to: '/resumes', endpoint: '/v1/resumes', dateField: 'postedAt' },
+  { key: 'placements', to: '/placements', endpoint: '/v1/placements', dateField: 'createdAt' },
+]
+
+function parseSeenMap() {
+  try {
+    const raw = localStorage.getItem(TAB_SEEN_AT_KEY)
+    const parsed = raw ? JSON.parse(raw) : {}
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistSeenMap(seenMap) {
+  localStorage.setItem(TAB_SEEN_AT_KEY, JSON.stringify(seenMap))
+}
 
 function Navbar({ isSidebarOpen, onCloseSidebar }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [tabBadges, setTabBadges] = useState({})
+  const hasInitializedBadges = useRef(false)
+  const latestBadges = useRef({})
   const isAuthenticated = sessionStorage.getItem('pmAuth') === 'true'
   const role = sessionStorage.getItem('pmRole') || 'student'
   let currentUser = null
@@ -20,6 +47,108 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
     .slice(0, 2)
     .map((item) => item[0]?.toUpperCase())
     .join('') || 'U'
+
+  const markTabAsSeen = useCallback((tabKey) => {
+    const seenMap = parseSeenMap()
+    seenMap[tabKey] = new Date().toISOString()
+    persistSeenMap(seenMap)
+    setTabBadges((previous) => {
+      const next = { ...previous, [tabKey]: 0 }
+      latestBadges.current = next
+      return next
+    })
+  }, [])
+
+  const refreshStudentTabBadges = useCallback(async () => {
+    if (!isAuthenticated || role !== 'student') {
+      return
+    }
+
+    const seenMap = parseSeenMap()
+    let shouldPersistSeenMap = false
+
+    try {
+      const responses = await Promise.all(
+        STUDENT_BADGE_TABS.map((tab) => http.get(tab.endpoint).catch(() => null)),
+      )
+
+      const nextBadges = {}
+
+      STUDENT_BADGE_TABS.forEach((tab, index) => {
+        if (!seenMap[tab.key]) {
+          seenMap[tab.key] = new Date().toISOString()
+          shouldPersistSeenMap = true
+        }
+
+        const seenAt = new Date(seenMap[tab.key]).getTime()
+        const items = responses[index]?.data?.data || []
+
+        const newItemsCount = items.filter((item) => {
+          const itemTime = new Date(item?.[tab.dateField] || 0).getTime()
+          return itemTime > seenAt
+        }).length
+
+        nextBadges[tab.key] = newItemsCount
+      })
+
+      if (shouldPersistSeenMap) {
+        persistSeenMap(seenMap)
+      }
+
+      if (hasInitializedBadges.current) {
+        STUDENT_BADGE_TABS.forEach((tab) => {
+          const previousCount = latestBadges.current[tab.key] || 0
+          const nextCount = nextBadges[tab.key] || 0
+
+          if (nextCount > previousCount) {
+            const delta = nextCount - previousCount
+            const noun = delta === 1 ? 'entry' : 'entries'
+            toast(`${delta} new ${tab.key === 'faq' ? 'FAQ' : tab.key} ${noun}`)
+          }
+        })
+      }
+
+      hasInitializedBadges.current = true
+      latestBadges.current = nextBadges
+      setTabBadges(nextBadges)
+    } catch {
+      // Keep existing badges when refresh fails.
+    }
+  }, [isAuthenticated, role])
+
+  useEffect(() => {
+    if (!isAuthenticated || role !== 'student') {
+      return
+    }
+
+    void refreshStudentTabBadges()
+
+    const intervalId = window.setInterval(() => {
+      void refreshStudentTabBadges()
+    }, 15000)
+
+    const handleFocus = () => {
+      void refreshStudentTabBadges()
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [isAuthenticated, role, refreshStudentTabBadges])
+
+  useEffect(() => {
+    if (!isAuthenticated || role !== 'student') {
+      return
+    }
+
+    const matchedTab = STUDENT_BADGE_TABS.find((tab) => location.pathname.startsWith(tab.to))
+    if (matchedTab) {
+      markTabAsSeen(matchedTab.key)
+    }
+  }, [isAuthenticated, role, location.pathname, markTabAsSeen])
 
   const handleLogout = async () => {
     try {
@@ -136,7 +265,13 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 <NavLink
                   key={link.to}
                   to={link.to}
-                  onClick={onCloseSidebar}
+                  onClick={() => {
+                    const badgeTab = STUDENT_BADGE_TABS.find((tab) => tab.to === link.to)
+                    if (badgeTab) {
+                      markTabAsSeen(badgeTab.key)
+                    }
+                    onCloseSidebar()
+                  }}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
                       isActive
@@ -148,7 +283,23 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
                     •
                   </span>
-                  {link.label}
+                  <span className="flex flex-1 items-center justify-between gap-2">
+                    <span>{link.label}</span>
+                    {(() => {
+                      const badgeTab = STUDENT_BADGE_TABS.find((tab) => tab.to === link.to)
+                      const count = badgeTab ? tabBadges[badgeTab.key] || 0 : 0
+
+                      if (!count) {
+                        return null
+                      }
+
+                      return (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                          {count}
+                        </span>
+                      )
+                    })()}
+                  </span>
                 </NavLink>
               ))}
             </nav>

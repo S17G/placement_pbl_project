@@ -19,6 +19,7 @@ function AdminDashboardPage() {
   const [showPlacementForm, setShowPlacementForm] = useState(false)
   const [editingPlacementId, setEditingPlacementId] = useState(null)
   const [placementForm, setPlacementForm] = useState(initialPlacementForm)
+  const pendingRequestsCount = requests.filter((request) => request.status === 'pending').length
 
   useEffect(() => {
     void refreshPlacements()
@@ -164,13 +165,22 @@ function AdminDashboardPage() {
             refreshRequests()
             setActiveTab('requests')
           }}
-          className={`rounded-full px-4 py-2 text-sm font-semibold ${
+          className={`rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2 ${
             activeTab === 'requests'
               ? 'bg-slate-900 text-white'
               : 'border border-slate-300 text-slate-700'
           }`}
         >
           Registration Requests
+          {pendingRequestsCount > 0 && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                activeTab === 'requests' ? 'bg-white text-slate-900' : 'bg-rose-100 text-rose-700'
+              }`}
+            >
+              {pendingRequestsCount}
+            </span>
+          )}
         </button>
         <button
           type="button"
