@@ -6,6 +6,7 @@ import FaqPage from './pages/FaqPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import PlacementDashboardPage from './pages/PlacementDashboardPage'
+import InternshipDashboardPage from './pages/InternshipDashboardPage'
 import PlacementReadinessPage from './pages/PlacementReadinessPage'
 import ApplicationTrackerPage from './pages/ApplicationTrackerPage'
 import RoadmapGeneratorPage from './pages/RoadmapGeneratorPage'
@@ -101,6 +102,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="student">
               <PlacementDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/internships"
+          element={
+            <ProtectedRoute allowedRole="student">
+              <InternshipDashboardPage />
             </ProtectedRoute>
           }
         />

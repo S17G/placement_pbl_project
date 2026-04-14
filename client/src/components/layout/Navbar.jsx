@@ -8,6 +8,7 @@ const STUDENT_BADGE_TABS = [
   { key: 'discussion', to: '/discussion', endpoint: '/v1/discussion', dateField: 'postedAt' },
   { key: 'faq', to: '/faq', endpoint: '/v1/faq', dateField: 'postedAt' },
   { key: 'resumes', to: '/resumes', endpoint: '/v1/resumes', dateField: 'postedAt' },
+  { key: 'internships', to: '/internships', endpoint: '/v1/internships', dateField: 'createdAt' },
   { key: 'placements', to: '/placements', endpoint: '/v1/placements', dateField: 'createdAt' },
 ]
 
@@ -179,7 +180,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } rounded-tr-3xl rounded-br-3xl`}
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <NavLink
             to={isAuthenticated ? (role === 'admin' ? '/admin' : '/dashboard') : '/login'}
             className="group flex items-center gap-2"
@@ -189,15 +190,6 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
               PlaceMate
             </span>
           </NavLink>
-
-          <button
-            type="button"
-            onClick={onCloseSidebar}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 lg:hidden"
-            aria-label="Close sidebar"
-          >
-            ×
-          </button>
         </div>
 
         <div className="mt-8 space-y-6">
@@ -259,6 +251,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 { to: '/resumes', label: 'Resume Library' },
                 { to: '/applications', label: 'Applications' },
                 { to: '/roadmaps', label: 'Roadmaps' },
+                { to: '/internships', label: 'Internships' },
                 { to: '/placements', label: 'Placements' },
                 { to: '/readiness', label: 'Readiness Check' },
               ].map((link) => (

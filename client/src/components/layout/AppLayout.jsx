@@ -25,10 +25,26 @@ function AppLayout() {
             <button
               type="button"
               onClick={() => setIsSidebarOpen((previous) => !previous)}
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+              aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+              className="group inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-900 shadow-sm transition hover:scale-[1.03] hover:border-cyan-500 hover:bg-cyan-50 active:scale-95"
             >
-              <span className="h-3.5 w-3.5 rounded-full bg-slate-900" />
-              {isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+              <span className="relative h-5 w-5">
+                <span
+                  className={`absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
+                    isSidebarOpen ? 'translate-y-2 rotate-45 bg-cyan-700' : ''
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-2 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
+                    isSidebarOpen ? 'opacity-0' : 'opacity-100'
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-4 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
+                    isSidebarOpen ? '-translate-y-2 -rotate-45 bg-cyan-700' : ''
+                  }`}
+                />
+              </span>
             </button>
           </div>
           <Outlet />

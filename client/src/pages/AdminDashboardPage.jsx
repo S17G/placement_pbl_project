@@ -10,19 +10,32 @@ const initialPlacementForm = {
   process: '',
 }
 
+const initialInternshipForm = {
+  company: '',
+  role: '',
+  package: '',
+  eligibility: '',
+  process: '',
+}
+
 function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('placements')
   const [placements, setPlacements] = useState([])
+  const [internships, setInternships] = useState([])
   const [requests, setRequests] = useState([])
   const [users, setUsers] = useState([])
   const [userSearch, setUserSearch] = useState('')
   const [showPlacementForm, setShowPlacementForm] = useState(false)
   const [editingPlacementId, setEditingPlacementId] = useState(null)
   const [placementForm, setPlacementForm] = useState(initialPlacementForm)
+  const [showInternshipForm, setShowInternshipForm] = useState(false)
+  const [editingInternshipId, setEditingInternshipId] = useState(null)
+  const [internshipForm, setInternshipForm] = useState(initialInternshipForm)
   const pendingRequestsCount = requests.filter((request) => request.status === 'pending').length
 
   useEffect(() => {
     void refreshPlacements()
+    void refreshInternships()
     void refreshRequests()
   }, [])
 
@@ -31,12 +44,26 @@ function AdminDashboardPage() {
     setEditingPlacementId(null)
   }
 
+  const resetInternshipForm = () => {
+    setInternshipForm(initialInternshipForm)
+    setEditingInternshipId(null)
+  }
+
   const refreshPlacements = async () => {
     try {
       const response = await http.get('/v1/placements')
       setPlacements(response.data?.data || [])
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Unable to fetch placement records.')
+    }
+  }
+
+  const refreshInternships = async () => {
+    try {
+      const response = await http.get('/v1/internships')
+      setInternships(response.data?.data || [])
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Unable to fetch internship records.')
     }
   }
 
@@ -63,6 +90,11 @@ function AdminDashboardPage() {
   const handlePlacementInput = (event) => {
     const { name, value } = event.target
     setPlacementForm((previous) => ({ ...previous, [name]: value }))
+  }
+
+  const handleInternshipInput = (event) => {
+    const { name, value } = event.target
+    setInternshipForm((previous) => ({ ...previous, [name]: value }))
   }
 
   const handlePlacementSubmit = async (event) => {
@@ -93,6 +125,34 @@ function AdminDashboardPage() {
     setShowPlacementForm(false)
   }
 
+  const handleInternshipSubmit = async (event) => {
+    event.preventDefault()
+
+    const values = Object.values(internshipForm).map((value) => value.trim())
+    if (values.some((value) => value.length === 0)) {
+      toast.error('Please fill all internship details.')
+      return
+    }
+
+    try {
+      if (editingInternshipId) {
+        await http.patch(`/v1/internships/${editingInternshipId}`, internshipForm)
+        toast.success('Internship record updated.')
+      } else {
+        await http.post('/v1/internships', internshipForm)
+        toast.success('Internship record added.')
+      }
+
+      await refreshInternships()
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Unable to save internship record.')
+      return
+    }
+
+    resetInternshipForm()
+    setShowInternshipForm(false)
+  }
+
   const handlePlacementEdit = (record) => {
     setEditingPlacementId(record._id)
     setPlacementForm({
@@ -105,6 +165,18 @@ function AdminDashboardPage() {
     setShowPlacementForm(true)
   }
 
+  const handleInternshipEdit = (record) => {
+    setEditingInternshipId(record._id)
+    setInternshipForm({
+      company: record.company,
+      role: record.role,
+      package: record.package,
+      eligibility: record.eligibility,
+      process: record.process,
+    })
+    setShowInternshipForm(true)
+  }
+
   const handlePlacementDelete = async (recordId) => {
     try {
       await http.delete(`/v1/placements/${recordId}`)
@@ -112,6 +184,16 @@ function AdminDashboardPage() {
       await refreshPlacements()
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Unable to delete placement record.')
+    }
+  }
+
+  const handleInternshipDelete = async (recordId) => {
+    try {
+      await http.delete(`/v1/internships/${recordId}`)
+      toast.success('Internship record deleted.')
+      await refreshInternships()
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Unable to delete internship record.')
     }
   }
 
@@ -143,7 +225,7 @@ function AdminDashboardPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">TnP Admin Dashboard</h1>
         <p className="text-sm text-slate-500 sm:text-base">
-          Manage placement records and student registration requests.
+          Manage placement and internship records along with student registration requests.
         </p>
       </div>
 
@@ -158,6 +240,20 @@ function AdminDashboardPage() {
           }`}
         >
           Placement Records
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            refreshInternships()
+            setActiveTab('internships')
+          }}
+          className={`rounded-full px-4 py-2 text-sm font-semibold ${
+            activeTab === 'internships'
+              ? 'bg-slate-900 text-white'
+              : 'border border-slate-300 text-slate-700'
+          }`}
+        >
+          Internship Records
         </button>
         <button
           type="button"
@@ -380,6 +476,137 @@ function AdminDashboardPage() {
               </article>
             ))
           )}
+        </div>
+      )}
+
+      {activeTab === 'internships' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Internship Management</p>
+              <p className="text-xs text-slate-500">Add, edit, or delete internship records.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (showInternshipForm) {
+                  resetInternshipForm()
+                }
+                setShowInternshipForm((previous) => !previous)
+              }}
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              {showInternshipForm ? 'Close Form' : 'Add Record'}
+            </button>
+          </div>
+
+          {showInternshipForm && (
+            <form
+              onSubmit={handleInternshipSubmit}
+              className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2"
+            >
+              <input
+                name="company"
+                value={internshipForm.company}
+                onChange={handleInternshipInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Company"
+              />
+              <input
+                name="role"
+                value={internshipForm.role}
+                onChange={handleInternshipInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Role"
+              />
+              <input
+                name="package"
+                value={internshipForm.package}
+                onChange={handleInternshipInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Package/Stipend"
+              />
+              <input
+                name="eligibility"
+                value={internshipForm.eligibility}
+                onChange={handleInternshipInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Eligibility"
+              />
+              <input
+                name="process"
+                value={internshipForm.process}
+                onChange={handleInternshipInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 sm:col-span-2"
+                placeholder="Selection process"
+              />
+
+              <div className="sm:col-span-2 flex justify-end gap-2">
+                {editingInternshipId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetInternshipForm()
+                      setShowInternshipForm(false)
+                    }}
+                    className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white"
+                >
+                  {editingInternshipId ? 'Update Record' : 'Save Record'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-100 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Company</th>
+                  <th className="px-4 py-3 font-semibold">Role</th>
+                  <th className="px-4 py-3 font-semibold">Package</th>
+                  <th className="px-4 py-3 font-semibold">Eligibility</th>
+                  <th className="px-4 py-3 font-semibold">Process</th>
+                  <th className="px-4 py-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {internships.map((record) => (
+                  <tr key={record._id || record.id} className="border-t border-slate-200">
+                    <td className="px-4 py-3">{record.company}</td>
+                    <td className="px-4 py-3">{record.role}</td>
+                    <td className="px-4 py-3">{record.package}</td>
+                    <td className="px-4 py-3">{record.eligibility}</td>
+                    <td className="px-4 py-3">{record.process}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleInternshipEdit(record)}
+                          className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleInternshipDelete(record._id)}
+                          className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
