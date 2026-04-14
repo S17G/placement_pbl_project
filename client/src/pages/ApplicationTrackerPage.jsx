@@ -40,7 +40,7 @@ function ApplicationTrackerPage() {
   const fetchApplications = async () => {
     setIsLoading(true)
     try {
-      const response = await http.get('/applications')
+      const response = await http.get('/v1/applications')
       setApplications(response.data?.data || [])
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Unable to load applications.')
@@ -73,10 +73,10 @@ function ApplicationTrackerPage() {
     setIsSubmitting(true)
     try {
       if (editingId) {
-        await http.put(`/applications/${editingId}`, payload)
+        await http.put(`/v1/applications/${editingId}`, payload)
         toast.success('Application updated successfully.')
       } else {
-        await http.post('/applications', payload)
+        await http.post('/v1/applications', payload)
         toast.success('Application added successfully.')
       }
       resetForm()
@@ -106,7 +106,7 @@ function ApplicationTrackerPage() {
     }
 
     try {
-      await http.delete(`/applications/${applicationId}`)
+      await http.delete(`/v1/applications/${applicationId}`)
       toast.success('Application deleted.')
       void fetchApplications()
       if (editingId === applicationId) {

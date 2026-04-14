@@ -1,0 +1,166 @@
+[
+  {
+    "id": "1776147117725",
+    "userId": "69c8c1354b338d378aadfd9f",
+    "title": "DS Preparation Roadmap",
+    "currentSkills": [
+      "dsa"
+    ],
+    "targetRole": "DS",
+    "experienceLevel": "beginner",
+    "timeAvailable": "moderate",
+    "goals": [
+      "analyst"
+    ],
+    "phases": [
+      {
+        "id": "foundation",
+        "title": "Foundation Building",
+        "description": "Build core skills and knowledge base",
+        "duration": "4-6 weeks",
+        "status": "completed",
+        "tasks": [
+          "Assess current skill gaps",
+          "Learn fundamental concepts",
+          "Complete basic tutorials and courses",
+          "Build small projects to practice basics"
+        ]
+      },
+      {
+        "id": "skill-dev",
+        "title": "Skill Development",
+        "description": "Deepen expertise in required technologies",
+        "duration": "6-10 weeks",
+        "status": "pending",
+        "tasks": [
+          "Master key technologies for the role",
+          "Complete intermediate/advanced courses",
+          "Work on relevant projects",
+          "Contribute to open source or personal projects"
+        ]
+      },
+      {
+        "id": "resume-portfolio",
+        "title": "Resume & Portfolio",
+        "description": "Create compelling resume and showcase work",
+        "duration": "1-2 weeks",
+        "status": "pending",
+        "tasks": [
+          "Update resume with relevant experience",
+          "Build portfolio website",
+          "Document projects and achievements",
+          "Get feedback on resume and portfolio"
+        ]
+      },
+      {
+        "id": "application-prep",
+        "title": "Application Preparation",
+        "description": "Prepare for job applications and interviews",
+        "duration": "2-3 weeks",
+        "status": "pending",
+        "tasks": [
+          "Research companies and job requirements",
+          "Network on LinkedIn and professional platforms",
+          "Prepare cover letters and application materials",
+          "Practice coding interviews and technical questions"
+        ]
+      },
+      {
+        "id": "interview",
+        "title": "Interview Phase",
+        "description": "Apply and interview for positions",
+        "duration": "Ongoing",
+        "status": "pending",
+        "tasks": [
+          "Apply to relevant job openings",
+          "Prepare for different interview types",
+          "Practice behavioral and technical interviews",
+          "Follow up on applications and interviews"
+        ]
+      }
+    ],
+    "createdAt": "2026-04-14T06:11:57.725Z",
+    "updatedAt": "2026-04-14T06:12:31.149Z"
+  },
+  {
+    "id": "1776147256591",
+    "userId": "69c772e04b338d378aadf786",
+    "title": "developer Preparation Roadmap",
+    "currentSkills": [],
+    "targetRole": "developer",
+    "experienceLevel": "beginner",
+    "timeAvailable": "moderate",
+    "goals": [
+      "developer"
+    ],
+    "phases": [
+      {
+        "id": "foundation",
+        "title": "Foundation Building",
+        "description": "Build core skills and knowledge base",
+        "duration": "4-6 weeks",
+        "status": "in-progress",
+        "tasks": [
+          "Assess current skill gaps",
+          "Learn fundamental concepts",
+          "Complete basic tutorials and courses",
+          "Build small projects to practice basics"
+        ]
+      },
+      {
+        "id": "skill-dev",
+        "title": "Skill Development",
+        "description": "Deepen expertise in required technologies",
+        "duration": "6-10 weeks",
+        "status": "pending",
+        "tasks": [
+          "Master key technologies for the role",
+          "Complete intermediate/advanced courses",
+          "Work on relevant projects",
+          "Contribute to open source or personal projects"
+        ]
+      },
+      {
+        "id": "resume-portfolio",
+        "title": "Resume & Portfolio",
+        "description": "Create compelling resume and showcase work",
+        "duration": "1-2 weeks",
+        "status": "pending",
+        "tasks": [
+          "Update resume with relevant experience",
+          "Build portfolio website",
+          "Document projects and achievements",
+          "Get feedback on resume and portfolio"
+        ]
+      },
+      {
+        "id": "application-prep",
+        "title": "Application Preparation",
+        "description": "Prepare for job applications and interviews",
+        "duration": "2-3 weeks",
+        "status": "pending",
+        "tasks": [
+          "Research companies and job requirements",
+          "Network on LinkedIn and professional platforms",
+          "Prepare cover letters and application materials",
+          "Practice coding interviews and technical questions"
+        ]
+      },
+      {
+        "id": "interview",
+        "title": "Interview Phase",
+        "description": "Apply and interview for positions",
+        "duration": "Ongoing",
+        "status": "pending",
+        "tasks": [
+          "Apply to relevant job openings",
+          "Prepare for different interview types",
+          "Practice behavioral and technical interviews",
+          "Follow up on applications and interviews"
+        ]
+      }
+    ],
+    "createdAt": "2026-04-14T06:14:16.591Z",
+    "updatedAt": "2026-04-14T06:14:31.648Z"
+  }
+]

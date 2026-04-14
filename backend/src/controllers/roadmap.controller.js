@@ -13,7 +13,7 @@ const generateRoadmap = asyncHandler(async (req, res) => {
         });
     }
 
-    const userId = req.user.id;
+    const userId = req.user?.sub || req.user?.id;
     const roadmapData = req.body;
 
     const roadmap = await roadmapService.generateRoadmap(userId, roadmapData);
@@ -27,7 +27,7 @@ const generateRoadmap = asyncHandler(async (req, res) => {
 
 // Get all roadmaps for a user
 const getUserRoadmaps = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user?.sub || req.user?.id;
 
     const roadmaps = await roadmapService.getUserRoadmaps(userId);
 
@@ -39,7 +39,7 @@ const getUserRoadmaps = asyncHandler(async (req, res) => {
 
 // Get a specific roadmap by ID
 const getRoadmapById = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user?.sub || req.user?.id;
     const roadmapId = req.params.id;
 
     const roadmap = await roadmapService.getRoadmapById(userId, roadmapId);
@@ -68,7 +68,7 @@ const updateRoadmap = asyncHandler(async (req, res) => {
         });
     }
 
-    const userId = req.user.id;
+    const userId = req.user?.sub || req.user?.id;
     const roadmapId = req.params.id;
     const updateData = req.body;
 
@@ -90,7 +90,7 @@ const updateRoadmap = asyncHandler(async (req, res) => {
 
 // Delete a roadmap
 const deleteRoadmap = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user?.sub || req.user?.id;
     const roadmapId = req.params.id;
 
     const deleted = await roadmapService.deleteRoadmap(userId, roadmapId);

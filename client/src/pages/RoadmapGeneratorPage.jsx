@@ -24,7 +24,7 @@ const RoadmapGeneratorPage = () => {
     const fetchRoadmaps = async () => {
         try {
             setLoading(true);
-            const response = await http.get('/roadmaps');
+            const response = await http.get('/v1/roadmaps');
             setRoadmaps(response.data.data);
         } catch (error) {
             toast.error('Failed to fetch roadmaps');
@@ -79,7 +79,7 @@ const RoadmapGeneratorPage = () => {
         e.preventDefault();
         try {
             setGenerating(true);
-            const response = await http.post('/roadmaps/generate', formData);
+            const response = await http.post('/v1/roadmaps/generate', formData);
             toast.success('Roadmap generated successfully!');
             setRoadmaps(prev => [response.data.data, ...prev]);
             setSelectedRoadmap(response.data.data);
@@ -105,7 +105,7 @@ const RoadmapGeneratorPage = () => {
                 phase.id === phaseId ? { ...phase, status } : phase
             );
 
-            const response = await http.put(`/roadmaps/${roadmapId}`, {
+            const response = await http.put(`/v1/roadmaps/${roadmapId}`, {
                 phases: updatedPhases
             });
 
@@ -127,7 +127,7 @@ const RoadmapGeneratorPage = () => {
         if (!confirm('Are you sure you want to delete this roadmap?')) return;
 
         try {
-            await http.delete(`/roadmaps/${roadmapId}`);
+            await http.delete(`/v1/roadmaps/${roadmapId}`);
             setRoadmaps(prev => prev.filter(r => r.id !== roadmapId));
             if (selectedRoadmap?.id === roadmapId) {
                 setSelectedRoadmap(null);
