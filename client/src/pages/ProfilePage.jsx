@@ -1,21 +1,195 @@
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import http from '../api/http'
+
 function ProfilePage() {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    prn: '',
+    branch: '',
+    year: '',
+    cgpa: '',
+    skills: '',
+    achievements: '',
+    resume: null,
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true)
+      try {
+        const response = await http.get('/v1/profile')
+        const user = response.data.data
+        setFormData({
+          fullName: user.fullName || '',
+          prn: user.prn || '',
+          branch: user.branch || '',
+          year: user.year || '',
+          cgpa: user.cgpa || '',
+          skills: user.skills ? user.skills.join(', ') : '',
+          achievements: user.achievements || '',
+          resume: null, // File input can't be pre-filled
+        })
+      } catch (error) {
+        toast.error(error?.response?.data?.message || 'Failed to load profile')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleFileChange = (e) => {
+    setFormData((prev) => ({ ...prev, resume: e.target.files[0] }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      const data = new FormData()
+      data.append('fullName', formData.fullName)
+      data.append('prn', formData.prn)
+      data.append('branch', formData.branch)
+      data.append('year', formData.year)
+      data.append('cgpa', formData.cgpa)
+      data.append('skills', formData.skills.split(',').map(s => s.trim()))
+      data.append('achievements', formData.achievements)
+      if (formData.resume) {
+        data.append('resume', formData.resume)
+      }
+
+      await http.put('/v1/profile', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      toast.success('Profile updated successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-slate-200 rounded mb-4"></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-10 bg-slate-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h1 className="text-2xl font-bold text-slate-900">Student Profile</h1>
+      <h1 className="text-2xl font-bold text-black">Student Profile</h1>
       <p className="text-sm text-slate-500">Manage academic details, skills, and your latest resume.</p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <input className="rounded-xl border border-slate-300 px-4 py-2.5" placeholder="Name" />
-        <input className="rounded-xl border border-slate-300 px-4 py-2.5" placeholder="PRN" />
-        <input className="rounded-xl border border-slate-300 px-4 py-2.5" placeholder="Branch" />
-        <input className="rounded-xl border border-slate-300 px-4 py-2.5" placeholder="CGPA" />
-        <textarea className="sm:col-span-2 min-h-28 rounded-xl border border-slate-300 px-4 py-2.5" placeholder="Skills, projects, achievements" />
-        <input className="sm:col-span-2" type="file" accept="application/pdf" />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold text-slate-700">Full Name</span>
+            <input
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="Enter your full name"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold text-slate-700">PRN</span>
+            <input
+              name="prn"
+              value={formData.prn}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="Enter your PRN"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold text-slate-700">Branch</span>
+            <input
+              name="branch"
+              value={formData.branch}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="e.g., Computer Engineering"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold text-slate-700">Year</span>
+            <input
+              name="year"
+              value={formData.year}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="e.g., TE"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold text-slate-700">CGPA</span>
+            <input
+              name="cgpa"
+              type="number"
+              step="0.01"
+              value={formData.cgpa}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="e.g., 8.5"
+            />
+          </label>
+          <label className="block space-y-2 sm:col-span-2">
+            <span className="text-sm font-semibold text-slate-700">Skills</span>
+            <input
+              name="skills"
+              value={formData.skills}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="e.g., JavaScript, React, Node.js (comma separated)"
+            />
+          </label>
+          <label className="block space-y-2 sm:col-span-2">
+            <span className="text-sm font-semibold text-slate-700">Achievements</span>
+            <textarea
+              name="achievements"
+              value={formData.achievements}
+              onChange={handleInputChange}
+              className="min-h-28 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2"
+              placeholder="Describe your projects, achievements, etc."
+            />
+          </label>
+          <label className="block space-y-2 sm:col-span-2">
+            <span className="text-sm font-semibold text-slate-700">Resume PDF</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 outline-none ring-cyan-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+            />
+          </label>
+        </div>
 
-      <button type="button" className="rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white">
-        Save Profile
-      </button>
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="rounded-xl bg-cyan-700 px-5 py-2.5 font-semibold text-white transition hover:bg-cyan-800 disabled:opacity-50"
+        >
+          {isSaving ? 'Saving...' : 'Save Profile'}
+        </button>
+      </form>
     </section>
   )
 }

@@ -45,6 +45,14 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    achievements: {
+      type: String,
+      default: '',
+    },
+    resume: {
+      type: String,
+      default: '',
+    },
     isApproved: {
       type: Boolean,
       default: false,

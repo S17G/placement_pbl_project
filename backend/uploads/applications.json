@@ -1,5 +1,16 @@
 [
   {
+    "_id": "3e1ff4e5-0797-4eb9-b7cd-00e7fc2a2bad",
+    "userId": "69d783d08d91c229e88afbfd",
+    "companyName": "Siemens",
+    "role": "Qa",
+    "status": "Interview",
+    "dateApplied": "2026-04-13",
+    "notes": "",
+    "createdAt": "2026-04-14T08:50:47.774Z",
+    "updatedAt": "2026-04-14T08:50:47.774Z"
+  },
+  {
     "_id": "1e7eae40-2bc9-45c2-bef0-b9ea2d465222",
     "userId": "69c772e04b338d378aadf786",
     "companyName": "sfyfyt",

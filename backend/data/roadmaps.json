@@ -162,5 +162,84 @@
     ],
     "createdAt": "2026-04-14T06:14:16.591Z",
     "updatedAt": "2026-04-14T06:14:31.648Z"
+  },
+  {
+    "id": "1776156659856",
+    "userId": "69d783d08d91c229e88afbfd",
+    "title": "Data Analyst Preparation Roadmap",
+    "currentSkills": [],
+    "targetRole": "Data Analyst",
+    "experienceLevel": "beginner",
+    "timeAvailable": "moderate",
+    "goals": [],
+    "phases": [
+      {
+        "id": "foundation",
+        "title": "Foundation Building",
+        "description": "Build core skills and knowledge base",
+        "duration": "4-6 weeks",
+        "status": "pending",
+        "tasks": [
+          "Assess current skill gaps",
+          "Learn fundamental concepts",
+          "Complete basic tutorials and courses",
+          "Build small projects to practice basics"
+        ]
+      },
+      {
+        "id": "skill-dev",
+        "title": "Skill Development",
+        "description": "Deepen expertise in required technologies",
+        "duration": "6-10 weeks",
+        "status": "pending",
+        "tasks": [
+          "Master key technologies for the role",
+          "Complete intermediate/advanced courses",
+          "Work on relevant projects",
+          "Contribute to open source or personal projects"
+        ]
+      },
+      {
+        "id": "resume-portfolio",
+        "title": "Resume & Portfolio",
+        "description": "Create compelling resume and showcase work",
+        "duration": "1-2 weeks",
+        "status": "pending",
+        "tasks": [
+          "Update resume with relevant experience",
+          "Build portfolio website",
+          "Document projects and achievements",
+          "Get feedback on resume and portfolio"
+        ]
+      },
+      {
+        "id": "application-prep",
+        "title": "Application Preparation",
+        "description": "Prepare for job applications and interviews",
+        "duration": "2-3 weeks",
+        "status": "pending",
+        "tasks": [
+          "Research companies and job requirements",
+          "Network on LinkedIn and professional platforms",
+          "Prepare cover letters and application materials",
+          "Practice coding interviews and technical questions"
+        ]
+      },
+      {
+        "id": "interview",
+        "title": "Interview Phase",
+        "description": "Apply and interview for positions",
+        "duration": "Ongoing",
+        "status": "pending",
+        "tasks": [
+          "Apply to relevant job openings",
+          "Prepare for different interview types",
+          "Practice behavioral and technical interviews",
+          "Follow up on applications and interviews"
+        ]
+      }
+    ],
+    "createdAt": "2026-04-14T08:50:59.856Z",
+    "updatedAt": "2026-04-14T08:50:59.856Z"
   }
 ]

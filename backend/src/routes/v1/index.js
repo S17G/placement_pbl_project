@@ -9,6 +9,7 @@ const faqRoutes = require('./faq.routes')
 const resumeRoutes = require('./resume.routes')
 const readinessRoutes = require('./readiness.routes')
 const roadmapRoutes = require('./roadmap.routes')
+const profileRoutes = require('./profile.routes')
 
 const router = express.Router()
 
@@ -22,5 +23,6 @@ router.use('/faq', faqRoutes)
 router.use('/resumes', resumeRoutes)
 router.use('/readiness', readinessRoutes)
 router.use('/roadmaps', roadmapRoutes)
+router.use('/profile', profileRoutes)
 
 module.exports = router

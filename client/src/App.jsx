@@ -12,6 +12,7 @@ import ApplicationTrackerPage from './pages/ApplicationTrackerPage'
 import RoadmapGeneratorPage from './pages/RoadmapGeneratorPage'
 import RegisterPage from './pages/RegisterPage'
 import ResumeLibraryPage from './pages/ResumeLibraryPage'
+import ProfilePage from './pages/ProfilePage'
 
 const isAuthenticated = () => sessionStorage.getItem('pmAuth') === 'true'
 const getRole = () => sessionStorage.getItem('pmRole') || 'student'
@@ -63,6 +64,14 @@ function App() {
             <PublicOnlyRoute>
               <RegisterPage />
             </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRole="student">
+              <ProfilePage />
+            </ProtectedRoute>
           }
         />
         <Route

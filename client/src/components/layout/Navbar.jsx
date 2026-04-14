@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { BarChart3, Briefcase, FileText, HelpCircle, Home, MessageCircle, Map, ShieldCheck, User, ClipboardList } from 'lucide-react'
 import http from '../../api/http'
 
 const TAB_SEEN_AT_KEY = 'pmStudentTabSeenAt'
@@ -48,6 +49,18 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
     .slice(0, 2)
     .map((item) => item[0]?.toUpperCase())
     .join('') || 'U'
+
+  const STUDENT_NAV_LINKS = [
+    { to: '/dashboard', label: 'Dashboard', icon: Home },
+    { to: '/discussion', label: 'Discussion', icon: MessageCircle },
+    { to: '/faq', label: 'FAQ', icon: HelpCircle },
+    { to: '/resumes', label: 'Resume Library', icon: FileText },
+    { to: '/applications', label: 'Applications', icon: ClipboardList },
+    { to: '/roadmaps', label: 'Roadmaps', icon: Map },
+    { to: '/internships', label: 'Internships', icon: Briefcase },
+    { to: '/placements', label: 'Placements', icon: BarChart3 },
+    { to: '/readiness', label: 'Readiness Check', icon: ShieldCheck },
+  ]
 
   const markTabAsSeen = useCallback((tabKey) => {
     const seenMap = parseSeenMap()
@@ -195,7 +208,11 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
         <div className="mt-8 space-y-6">
           {isAuthenticated ? (
             <div className="space-y-3">
-              <div className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <NavLink
+                to="/profile"
+                onClick={onCloseSidebar}
+                className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
+              >
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-200 text-sm font-bold text-slate-700">
                   {initials}
                 </span>
@@ -203,7 +220,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                   <p className="font-semibold text-slate-900">{currentUser?.name || 'Student User'}</p>
                   <p className="text-xs text-slate-500">{currentUser?.year || 'Year not set'} • {currentUser?.branch || 'Branch not set'}</p>
                 </div>
-              </div>
+              </NavLink>
 
               <button
                 type="button"
@@ -244,57 +261,50 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
 
           {isAuthenticated && role === 'student' && (
             <nav className="space-y-2">
-              {[
-                { to: '/dashboard', label: 'Dashboard' },
-                { to: '/discussion', label: 'Discussion' },
-                { to: '/faq', label: 'FAQ' },
-                { to: '/resumes', label: 'Resume Library' },
-                { to: '/applications', label: 'Applications' },
-                { to: '/roadmaps', label: 'Roadmaps' },
-                { to: '/internships', label: 'Internships' },
-                { to: '/placements', label: 'Placements' },
-                { to: '/readiness', label: 'Readiness Check' },
-              ].map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => {
-                    const badgeTab = STUDENT_BADGE_TABS.find((tab) => tab.to === link.to)
-                    if (badgeTab) {
-                      markTabAsSeen(badgeTab.key)
-                    }
-                    onCloseSidebar()
-                  }}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
-                      isActive
-                        ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
-                        : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                    }`
-                  }
-                >
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
-                    •
-                  </span>
-                  <span className="flex flex-1 items-center justify-between gap-2">
-                    <span>{link.label}</span>
-                    {(() => {
+              {STUDENT_NAV_LINKS.map((link) => {
+                const Icon = link.icon
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => {
                       const badgeTab = STUDENT_BADGE_TABS.find((tab) => tab.to === link.to)
-                      const count = badgeTab ? tabBadges[badgeTab.key] || 0 : 0
-
-                      if (!count) {
-                        return null
+                      if (badgeTab) {
+                        markTabAsSeen(badgeTab.key)
                       }
+                      onCloseSidebar()
+                    }}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
+                        isActive
+                          ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
+                          : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      }`
+                    }
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="flex flex-1 items-center justify-between gap-2">
+                      <span>{link.label}</span>
+                      {(() => {
+                        const badgeTab = STUDENT_BADGE_TABS.find((tab) => tab.to === link.to)
+                        const count = badgeTab ? tabBadges[badgeTab.key] || 0 : 0
 
-                      return (
-                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
-                          {count}
-                        </span>
-                      )
-                    })()}
-                  </span>
-                </NavLink>
-              ))}
+                        if (!count) {
+                          return null
+                        }
+
+                        return (
+                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                            {count}
+                          </span>
+                        )
+                      })()}
+                    </span>
+                  </NavLink>
+                )
+              })}
             </nav>
           )}
 
