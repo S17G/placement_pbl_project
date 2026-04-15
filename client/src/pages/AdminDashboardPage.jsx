@@ -3,11 +3,17 @@ import toast from 'react-hot-toast'
 import http from '../api/http'
 
 const initialPlacementForm = {
+  name: '',
   company: '',
   role: '',
-  package: '',
-  eligibility: '',
-  process: '',
+  branch: '',
+  batch: '',
+  date: '',
+  email: '',
+  views: '',
+  profile_pic: '',
+  uid: '',
+  content_markdown: '',
 }
 
 const initialInternshipForm = {
@@ -156,11 +162,17 @@ function AdminDashboardPage() {
   const handlePlacementEdit = (record) => {
     setEditingPlacementId(record._id)
     setPlacementForm({
+      name: record.name || '',
       company: record.company,
       role: record.role,
-      package: record.package,
-      eligibility: record.eligibility,
-      process: record.process,
+      branch: record.branch || '',
+      batch: record.batch || '',
+      date: record.date || '',
+      email: record.email || '',
+      views: record.views ?? '',
+      profile_pic: record.profile_pic || '',
+      uid: record.uid || '',
+      content_markdown: record.content_markdown || '',
     })
     setShowPlacementForm(true)
   }
@@ -321,6 +333,13 @@ function AdminDashboardPage() {
               className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2"
             >
               <input
+                name="name"
+                value={placementForm.name}
+                onChange={handlePlacementInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Student name"
+              />
+              <input
                 name="company"
                 value={placementForm.company}
                 onChange={handlePlacementInput}
@@ -335,25 +354,62 @@ function AdminDashboardPage() {
                 placeholder="Role"
               />
               <input
-                name="package"
-                value={placementForm.package}
+                name="branch"
+                value={placementForm.branch}
                 onChange={handlePlacementInput}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                placeholder="Package"
+                placeholder="Branch"
               />
               <input
-                name="eligibility"
-                value={placementForm.eligibility}
+                name="batch"
+                value={placementForm.batch}
                 onChange={handlePlacementInput}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                placeholder="Eligibility"
+                placeholder="Batch"
               />
               <input
-                name="process"
-                value={placementForm.process}
+                name="date"
+                value={placementForm.date}
                 onChange={handlePlacementInput}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 sm:col-span-2"
-                placeholder="Selection process"
+                placeholder="Date"
+              />
+              <input
+                name="email"
+                value={placementForm.email}
+                onChange={handlePlacementInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Email"
+              />
+              <input
+                name="views"
+                value={placementForm.views}
+                onChange={handlePlacementInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Views"
+                type="number"
+                min="0"
+              />
+              <input
+                name="profile_pic"
+                value={placementForm.profile_pic}
+                onChange={handlePlacementInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="Profile picture URL"
+              />
+              <input
+                name="uid"
+                value={placementForm.uid}
+                onChange={handlePlacementInput}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                placeholder="UID / slug"
+              />
+              <textarea
+                name="content_markdown"
+                value={placementForm.content_markdown}
+                onChange={handlePlacementInput}
+                className="min-h-40 w-full rounded-xl border border-slate-300 px-4 py-3 sm:col-span-2"
+                placeholder="Content markdown"
               />
 
               <div className="sm:col-span-2 flex justify-end gap-2">
@@ -383,22 +439,28 @@ function AdminDashboardPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-100 text-slate-700">
                 <tr>
+                  <th className="px-4 py-3 font-semibold">Name</th>
                   <th className="px-4 py-3 font-semibold">Company</th>
                   <th className="px-4 py-3 font-semibold">Role</th>
-                  <th className="px-4 py-3 font-semibold">Package</th>
-                  <th className="px-4 py-3 font-semibold">Eligibility</th>
-                  <th className="px-4 py-3 font-semibold">Process</th>
+                  <th className="px-4 py-3 font-semibold">Branch</th>
+                  <th className="px-4 py-3 font-semibold">Batch</th>
+                  <th className="px-4 py-3 font-semibold">Date</th>
+                  <th className="px-4 py-3 font-semibold">Email</th>
+                  <th className="px-4 py-3 font-semibold">Views</th>
                   <th className="px-4 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {placements.map((record) => (
                   <tr key={record._id || record.id} className="border-t border-slate-200">
+                    <td className="px-4 py-3">{record.name || '-'}</td>
                     <td className="px-4 py-3">{record.company}</td>
                     <td className="px-4 py-3">{record.role}</td>
-                    <td className="px-4 py-3">{record.package}</td>
-                    <td className="px-4 py-3">{record.eligibility}</td>
-                    <td className="px-4 py-3">{record.process}</td>
+                    <td className="px-4 py-3">{record.branch || '-'}</td>
+                    <td className="px-4 py-3">{record.batch || '-'}</td>
+                    <td className="px-4 py-3">{new Date(record.date || record.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">{record.email || '-'}</td>
+                    <td className="px-4 py-3">{record.views ?? '-'}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button

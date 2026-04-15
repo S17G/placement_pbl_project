@@ -7,13 +7,13 @@ function DashboardPage() {
   const [activeZone, setActiveZone] = useState('connect')
   const [activeGraph, setActiveGraph] = useState('trend')
   const [stats, setStats] = useState([
-    { label: 'Companies Visited', value: '0' },
+    { label: 'Total Company Entries', value: '0' },
     { label: 'Open Discussions', value: '0' },
     { label: 'FAQ Entries', value: '0' },
     { label: 'Shared Resumes', value: '0' },
   ])
   const [animatedStats, setAnimatedStats] = useState([
-    { label: 'Companies Visited', value: '0' },
+    { label: 'Total Company Entries', value: '0' },
     { label: 'Open Discussions', value: '0' },
     { label: 'FAQ Entries', value: '0' },
     { label: 'Shared Resumes', value: '0' },
@@ -44,14 +44,8 @@ function DashboardPage() {
         const faqs = faqResponse.data?.data || []
         const resumes = resumeResponse.data?.data || []
 
-        const companySet = new Set(
-          [...placements, ...internships]
-            .map((record) => String(record?.company || '').trim().toLowerCase())
-            .filter(Boolean),
-        )
-
         setStats([
-          { label: 'Companies Visited', value: String(companySet.size) },
+          { label: 'Total Company Entries', value: String(placements.length + internships.length) },
           { label: 'Open Discussions', value: String(discussions.length) },
           { label: 'FAQ Entries', value: String(faqs.length) },
           { label: 'Shared Resumes', value: String(resumes.length) },
@@ -68,14 +62,27 @@ function DashboardPage() {
 
     void fetchDashboardStats()
 
+    const refreshTimer = window.setInterval(() => {
+      void fetchDashboardStats()
+    }, 30000)
+
     const handleFocus = () => {
       void fetchDashboardStats()
     }
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        void fetchDashboardStats()
+      }
+    }
+
     window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.clearInterval(refreshTimer)
     }
   }, [])
 
@@ -149,7 +156,7 @@ function DashboardPage() {
         key: 'build',
         label: 'Build Score',
         value: Number(stats[0]?.value || 0) + Number(stats[3]?.value || 0),
-        helper: 'Companies + Resume resources',
+        helper: 'Company entries + Resume resources',
       },
       {
         key: 'execute',
@@ -162,7 +169,7 @@ function DashboardPage() {
   )
   const chartMetrics = useMemo(
     () => [
-      { label: 'Companies', value: Number(stats[0]?.value || 0), to: '/placements' },
+      { label: 'Entries', value: Number(stats[0]?.value || 0), to: '/placements' },
       { label: 'Discussion', value: Number(stats[1]?.value || 0), to: '/discussion' },
       { label: 'FAQ', value: Number(stats[2]?.value || 0), to: '/faq' },
       { label: 'Resumes', value: Number(stats[3]?.value || 0), to: '/resumes' },

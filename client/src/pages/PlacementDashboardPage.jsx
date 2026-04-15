@@ -50,34 +50,38 @@ function PlacementDashboardPage() {
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
+              <th className="px-4 py-3 font-semibold">Name</th>
               <th className="px-4 py-3 font-semibold">Company</th>
               <th className="px-4 py-3 font-semibold">Role</th>
-              <th className="px-4 py-3 font-semibold">Package</th>
-              <th className="px-4 py-3 font-semibold">Eligibility</th>
-              <th className="px-4 py-3 font-semibold">Process</th>
+              <th className="px-4 py-3 font-semibold">Branch</th>
+              <th className="px-4 py-3 font-semibold">Batch</th>
+              <th className="px-4 py-3 font-semibold">Date</th>
+              <th className="px-4 py-3 font-semibold">Email</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr className="border-t border-slate-200">
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   Loading placement records...
                 </td>
               </tr>
             ) : placementRecords.length === 0 ? (
               <tr className="border-t border-slate-200">
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   No placement records available.
                 </td>
               </tr>
             ) : (
               placementRecords.map((record) => (
                 <tr key={record._id || record.id} className="border-t border-slate-200">
+                  <td className="px-4 py-3">{record.name || '-'}</td>
                   <td className="px-4 py-3">{record.company}</td>
                   <td className="px-4 py-3">{record.role}</td>
-                  <td className="px-4 py-3">{record.package}</td>
-                  <td className="px-4 py-3">{record.eligibility}</td>
-                  <td className="px-4 py-3">{record.process}</td>
+                  <td className="px-4 py-3">{record.branch || '-'}</td>
+                  <td className="px-4 py-3">{record.batch || '-'}</td>
+                  <td className="px-4 py-3">{new Date(record.date || record.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">{record.email || '-'}</td>
                 </tr>
               ))
             )}
