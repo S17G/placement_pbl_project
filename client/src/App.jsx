@@ -3,6 +3,7 @@ import AppLayout from './components/layout/AppLayout'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import DiscussionPage from './pages/DiscussionPage'
 import FaqPage from './pages/FaqPage'
+import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import PlacementDashboardPage from './pages/PlacementDashboardPage'
@@ -20,6 +21,14 @@ const getRole = () => sessionStorage.getItem('pmRole') || 'student'
 const getDefaultRoute = () => {
   if (!isAuthenticated()) {
     return '/login'
+  }
+
+  return getRole() === 'admin' ? '/admin' : '/dashboard'
+}
+
+const getCatchAllRoute = () => {
+  if (!isAuthenticated()) {
+    return '/'
   }
 
   return getRole() === 'admin' ? '/admin' : '/dashboard'
@@ -48,8 +57,8 @@ function PublicOnlyRoute({ children }) {
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
         <Route
           path="/login"
           element={
@@ -154,7 +163,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
+        <Route path="*" element={<Navigate to={getCatchAllRoute()} replace />} />
       </Route>
     </Routes>
   )

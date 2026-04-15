@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { ArrowLeft, ShieldCheck, UserRound } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import http from '../api/http'
 
 function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState('student')
   const navigate = useNavigate()
+
+  const clearAuthState = () => {
+    sessionStorage.removeItem('pmAuth')
+    sessionStorage.removeItem('pmRole')
+    sessionStorage.removeItem('pmCurrentUser')
+    sessionStorage.removeItem('pmAccessToken')
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -29,6 +38,23 @@ function LoginPage() {
       const loggedInUser = response.data?.data?.user
       const accessToken = response.data?.data?.token
       const role = loggedInUser?.role || 'student'
+      const expectedRole = activeTab
+
+      if (role !== expectedRole) {
+        clearAuthState()
+        try {
+          await http.post('/v1/auth/logout')
+        } catch {
+          // Ignore cleanup errors.
+        }
+
+        toast.error(
+          role === 'admin'
+            ? 'This account is admin. Please use Admin Login tab.'
+            : 'This account is student. Please use Student Login tab.',
+        )
+        return
+      }
 
       if (accessToken) {
         sessionStorage.setItem('pmAccessToken', accessToken)
@@ -56,77 +82,91 @@ function LoginPage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
-      <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg animate-fade-up lg:grid-cols-2">
-        <aside className="bg-linear-to-br from-slate-900 via-slate-800 to-emerald-700 p-7 text-white sm:p-10">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest">
-            <span className="inline-block h-2 w-2 rounded-full bg-cyan-300" />
-            PlaceMate
-          </p>
-          <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl">
-            Welcome Back,
-            <br />
-            Future Achiever
-          </h1>
-          <p className="mt-4 max-w-md text-sm text-slate-100 sm:text-base">
-            Login to explore placement updates, peer discussions, and your
-            personalized preparation journey.
-          </p>
-        </aside>
+    <section className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-[36px_20px_36px_20px] border border-slate-800 bg-slate-950 text-slate-100 shadow-[0_32px_90px_-35px_rgba(34,211,238,0.45)] animate-fade-up">
+      <div className="pointer-events-none absolute inset-0">
+        <span className="absolute -left-16 top-0 h-72 w-72 rounded-full bg-cyan-500/12 blur-3xl" />
+        <span className="absolute -right-14 bottom-0 h-72 w-72 rounded-full bg-emerald-500/12 blur-3xl" />
+        <span className="floating-orb animate-float-y left-[12%] top-[20%] h-6 w-6 bg-cyan-300/35" />
+        <span className="floating-orb animate-float-x right-[10%] top-[34%] h-5 w-5 bg-emerald-300/30" />
+      </div>
 
-        <div className="p-6 animate-fade-up-delay sm:p-10">
-          <h2 className="text-2xl font-bold text-slate-900">Student Login</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Use your registered email and password.
-          </p>
+      <div className="relative p-6 animate-fade-up-delay sm:p-10">
+          <div className="mb-6 flex items-center justify-between">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/45 hover:text-cyan-100"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-1.5">
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('student')}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                  activeTab === 'student'
+                    ? 'bg-cyan-400 text-slate-950'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <UserRound className="h-4 w-4" />
+                Student Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('admin')}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                  activeTab === 'admin'
+                    ? 'bg-cyan-400 text-slate-950'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin Login
+              </button>
+            </div>
+          </div>
+
+          <h2 className="mt-6 text-2xl font-bold text-white">
+            {activeTab === 'admin' ? 'Admin Login' : 'Student Login'}
+          </h2>
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
             <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">College Email</span>
+              <span className="text-sm font-semibold text-slate-200">Email</span>
               <input
                 type="email"
                 name="email"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none ring-emerald-500 transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2"
-                placeholder="name@college.edu"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none ring-cyan-400 transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2"
+                placeholder={activeTab === 'admin' ? 'admin@college.edu' : 'name@college.edu'}
               />
             </label>
 
             <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Password</span>
+              <span className="text-sm font-semibold text-slate-200">Password</span>
               <input
                 type="password"
                 name="password"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none ring-emerald-500 transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none ring-cyan-400 transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2"
                 placeholder="Enter your password"
               />
             </label>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="inline-flex items-center gap-2 text-slate-600">
-                <input type="checkbox" className="size-4 rounded border-slate-300 text-emerald-600" />
-                Remember me
-              </label>
-              <button type="button" className="font-semibold text-emerald-700 hover:text-emerald-800">
-                Forgot password?
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? 'Logging in...' : 'Login to PlaceMate'}
+              {isSubmitting
+                ? 'Logging in...'
+                : activeTab === 'admin'
+                  ? 'Login as Admin'
+                  : 'Login as Student'}
             </button>
           </form>
-
-          <p className="mt-5 text-sm text-slate-600">
-            New student?{' '}
-            <Link to="/register" className="font-semibold text-emerald-700 hover:text-emerald-800">
-              Create your account
-            </Link>
-          </p>
-        </div>
       </div>
     </section>
   )

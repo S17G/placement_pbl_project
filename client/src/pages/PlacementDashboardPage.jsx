@@ -42,13 +42,13 @@ function PlacementDashboardPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Placement Information Dashboard</h1>
-        <p className="text-sm text-slate-500">Admin-managed company details and selection insights.</p>
+        <h1 className="text-2xl font-bold text-slate-100">Placement Information Dashboard</h1>
+        <p className="text-sm text-slate-400">Admin-managed company details and selection insights.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/75 shadow-sm">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-100 text-slate-700">
+          <thead className="bg-slate-900 text-slate-300">
             <tr>
               <th className="px-4 py-3 font-semibold">Name</th>
               <th className="px-4 py-3 font-semibold">Company</th>
@@ -61,20 +61,20 @@ function PlacementDashboardPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr className="border-t border-slate-200">
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+              <tr className="border-t border-slate-700">
+                <td className="px-4 py-3 text-slate-400" colSpan={7}>
                   Loading placement records...
                 </td>
               </tr>
             ) : placementRecords.length === 0 ? (
-              <tr className="border-t border-slate-200">
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+              <tr className="border-t border-slate-700">
+                <td className="px-4 py-3 text-slate-400" colSpan={7}>
                   No placement records available.
                 </td>
               </tr>
             ) : (
               placementRecords.map((record) => (
-                <tr key={record._id || record.id} className="border-t border-slate-200">
+                <tr key={record._id || record.id} className="border-t border-slate-700 text-slate-200">
                   <td className="px-4 py-3">{record.name || '-'}</td>
                   <td className="px-4 py-3">{record.company}</td>
                   <td className="px-4 py-3">{record.role}</td>

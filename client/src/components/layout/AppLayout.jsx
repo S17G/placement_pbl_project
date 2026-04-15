@@ -8,13 +8,13 @@ function AppLayout() {
     sessionStorage.getItem('pmAuth') === 'true' && sessionStorage.getItem('pmRole') === 'student'
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-app text-slate-900">
+    <div className="app-shell-dark relative min-h-screen overflow-x-clip bg-app text-slate-100">
       {isStudentView && (
         <>
-          <span className="floating-orb animate-float-y left-[6%] top-[14%] h-20 w-20 bg-cyan-200/35" />
-          <span className="floating-orb animate-float-x right-[8%] top-[28%] h-16 w-16 bg-emerald-200/40" />
-          <span className="floating-orb animate-float-y bottom-[18%] left-[12%] h-14 w-14 bg-sky-300/30" />
-          <span className="floating-orb animate-float-x bottom-[8%] right-[16%] h-24 w-24 bg-teal-200/28" />
+          <span className="floating-orb animate-float-y left-[6%] top-[14%] h-20 w-20 bg-cyan-500/18" />
+          <span className="floating-orb animate-float-x right-[8%] top-[28%] h-16 w-16 bg-emerald-500/18" />
+          <span className="floating-orb animate-float-y bottom-[18%] left-[12%] h-14 w-14 bg-sky-500/16" />
+          <span className="floating-orb animate-float-x bottom-[8%] right-[16%] h-24 w-24 bg-teal-500/14" />
         </>
       )}
 
@@ -26,22 +26,22 @@ function AppLayout() {
               type="button"
               onClick={() => setIsSidebarOpen((previous) => !previous)}
               aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-              className="group inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-900 shadow-sm transition hover:scale-[1.03] hover:border-cyan-500 hover:bg-cyan-50 active:scale-95"
+              className="group inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-sm transition hover:scale-[1.03] hover:border-cyan-400 hover:bg-slate-800 active:scale-95"
             >
               <span className="relative h-5 w-5">
                 <span
-                  className={`absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
-                    isSidebarOpen ? 'translate-y-2 rotate-45 bg-cyan-700' : ''
+                  className={`absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-slate-100 transition-all duration-300 ${
+                    isSidebarOpen ? 'translate-y-2 rotate-45 bg-cyan-300' : ''
                   }`}
                 />
                 <span
-                  className={`absolute left-0 top-2 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
+                  className={`absolute left-0 top-2 block h-0.5 w-5 rounded-full bg-slate-100 transition-all duration-300 ${
                     isSidebarOpen ? 'opacity-0' : 'opacity-100'
                   }`}
                 />
                 <span
-                  className={`absolute left-0 top-4 block h-0.5 w-5 rounded-full bg-slate-900 transition-all duration-300 ${
-                    isSidebarOpen ? '-translate-y-2 -rotate-45 bg-cyan-700' : ''
+                  className={`absolute left-0 top-4 block h-0.5 w-5 rounded-full bg-slate-100 transition-all duration-300 ${
+                    isSidebarOpen ? '-translate-y-2 -rotate-45 bg-cyan-300' : ''
                   }`}
                 />
               </span>

@@ -189,13 +189,13 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-slate-200 bg-white p-5 shadow-2xl transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-slate-800 bg-slate-950 p-5 shadow-2xl transition-transform duration-300 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } rounded-tr-3xl rounded-br-3xl`}
       >
         <div className="flex items-center gap-3">
           <NavLink
-            to={isAuthenticated ? (role === 'admin' ? '/admin' : '/dashboard') : '/login'}
+            to={isAuthenticated ? (role === 'admin' ? '/admin' : '/dashboard') : '/'}
             className="group flex items-center gap-2"
           >
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_0_6px_rgba(14,116,144,0.14)]" />
@@ -211,14 +211,14 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
               <NavLink
                 to="/profile"
                 onClick={onCloseSidebar}
-                className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
+                className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-400/60 hover:bg-slate-800"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-200 text-sm font-bold text-slate-700">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-sm font-bold text-cyan-100">
                   {initials}
                 </span>
                 <div>
-                  <p className="font-semibold text-slate-900">{currentUser?.name || 'Student User'}</p>
-                  <p className="text-xs text-slate-500">{currentUser?.year || 'Year not set'} • {currentUser?.branch || 'Branch not set'}</p>
+                  <p className="font-semibold text-slate-100">{currentUser?.name || 'Student User'}</p>
+                  <p className="text-xs text-slate-400">{currentUser?.year || 'Year not set'} • {currentUser?.branch || 'Branch not set'}</p>
                 </div>
               </NavLink>
 
@@ -237,8 +237,8 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 className={({ isActive }) =>
                   `rounded-3xl border px-4 py-3 text-sm font-semibold ${
                     isActive
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                      : 'border-slate-700 text-slate-200 hover:bg-slate-900'
                   }`
                 }
               >
@@ -249,8 +249,8 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 className={({ isActive }) =>
                   `rounded-3xl border px-4 py-3 text-sm font-semibold ${
                     isActive
-                      ? 'bg-slate-900 text-white'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                      : 'border-slate-700 text-slate-200 hover:bg-slate-900'
                   }`
                 }
               >
@@ -277,12 +277,12 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
                         isActive
-                          ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
-                          : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                          : 'border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-900'
                       }`
                     }
                   >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-800 text-slate-300">
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="flex flex-1 items-center justify-between gap-2">
@@ -315,12 +315,12 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
                   isActive
-                    ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
-                    : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                    : 'border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-900'
                 }`
               }
             >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-800 text-slate-300">
                 •
               </span>
               Admin Dashboard

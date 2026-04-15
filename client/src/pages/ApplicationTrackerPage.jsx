@@ -3,10 +3,10 @@ import toast from 'react-hot-toast'
 import http from '../api/http'
 
 const statusStyles = {
-  Applied: 'bg-sky-100 text-sky-700',
-  Interview: 'bg-amber-100 text-amber-700',
-  Rejected: 'bg-rose-100 text-rose-700',
-  Selected: 'bg-emerald-100 text-emerald-700',
+  Applied: 'bg-sky-900/40 text-sky-200 border border-sky-700/50',
+  Interview: 'bg-amber-900/40 text-amber-200 border border-amber-700/50',
+  Rejected: 'bg-rose-900/40 text-rose-200 border border-rose-700/50',
+  Selected: 'bg-emerald-900/40 text-emerald-200 border border-emerald-700/50',
 }
 
 const emptyForm = {
