@@ -7,9 +7,10 @@
 
 @utility bg-app {
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(16, 185, 129, 0.09) 0%, transparent 42%),
-    radial-gradient(circle at 90% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
-    linear-gradient(180deg, #020617 0%, #0b1120 100%);
+    radial-gradient(circle at 12% 18%, rgba(251, 146, 60, 0.11) 0%, transparent 42%),
+    radial-gradient(circle at 90% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 38%),
+    radial-gradient(circle at 72% 78%, rgba(251, 146, 60, 0.08) 0%, transparent 34%),
+    linear-gradient(180deg, #020617 0%, #111827 100%);
 }
 
 html,
@@ -21,12 +22,17 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: #020617;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(251, 146, 60, 0.12) 0%, transparent 28%),
+    radial-gradient(circle at 85% 15%, rgba(245, 158, 11, 0.1) 0%, transparent 24%),
+    radial-gradient(circle at 50% 85%, rgba(251, 191, 36, 0.07) 0%, transparent 26%),
+    #020617;
   color: #e2e8f0;
 }
 
 .app-shell-dark .bg-white {
   background-color: #0f172a !important;
+  background-image: linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(45, 24, 13, 0.84)) !important;
 }
 
 .app-shell-dark .text-slate-900 {
@@ -35,18 +41,32 @@ body {
 
 .app-shell-dark .border-slate-200,
 .app-shell-dark .border-slate-300 {
-  border-color: #334155 !important;
+  border-color: rgba(251, 146, 60, 0.16) !important;
 }
 
 .app-shell-dark .bg-slate-50,
 .app-shell-dark .bg-slate-100 {
   background-color: #111827 !important;
+  background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(40, 20, 10, 0.92)) !important;
 }
 
 .app-shell-dark .text-slate-700,
 .app-shell-dark .text-slate-600,
 .app-shell-dark .text-slate-500 {
   color: #94a3b8 !important;
+}
+
+.app-shell-dark .bg-slate-900,
+.app-shell-dark .bg-slate-950 {
+  background-color: #0b1120 !important;
+  background-image: linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(33, 20, 10, 0.98)) !important;
+}
+
+.app-shell-dark .border,
+.app-shell-dark .rounded-3xl,
+.app-shell-dark .rounded-2xl,
+.app-shell-dark .rounded-xl {
+  border-color: rgba(251, 146, 60, 0.12);
 }
 
 .app-shell-dark h1,
@@ -63,19 +83,68 @@ body {
 
 .app-shell-dark .rounded-3xl.border,
 .app-shell-dark .rounded-2xl.border {
-  border-color: #334155 !important;
-  background-image: linear-gradient(160deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.72) 65%, rgba(8, 47, 73, 0.35) 100%);
+  border-color: rgba(251, 146, 60, 0.18) !important;
+  background-image: linear-gradient(160deg, rgba(15, 23, 42, 0.94) 0%, rgba(34, 18, 12, 0.8) 65%, rgba(120, 53, 15, 0.28) 100%);
+}
+
+.app-shell-dark [class*='bg-cyan-'],
+.app-shell-dark [class*='bg-sky-'],
+.app-shell-dark [class*='bg-emerald-'],
+.app-shell-dark [class*='bg-fuchsia-'],
+.app-shell-dark [class*='bg-violet-'] {
+  filter: saturate(0.95) brightness(0.95);
+}
+
+.app-shell-dark [class*='bg-cyan-'] {
+  background-color: rgba(251, 146, 60, 0.92) !important;
+  background-image: linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(245, 158, 11, 0.9)) !important;
+}
+
+.app-shell-dark [class*='bg-emerald-'] {
+  background-color: rgba(249, 115, 22, 0.82) !important;
+  background-image: linear-gradient(135deg, rgba(251, 146, 60, 0.9), rgba(217, 119, 6, 0.88)) !important;
+}
+
+.app-shell-dark [class*='bg-sky-'] {
+  background-color: rgba(251, 191, 36, 0.82) !important;
+  background-image: linear-gradient(135deg, rgba(251, 191, 36, 0.92), rgba(245, 158, 11, 0.88)) !important;
+}
+
+.app-shell-dark [class*='bg-fuchsia-'],
+.app-shell-dark [class*='bg-violet-'] {
+  background-color: rgba(251, 146, 60, 0.7) !important;
+  background-image: linear-gradient(135deg, rgba(251, 146, 60, 0.9), rgba(245, 158, 11, 0.82)) !important;
+}
+
+.app-shell-dark [class*='border-cyan-'],
+.app-shell-dark [class*='border-emerald-'],
+.app-shell-dark [class*='border-sky-'],
+.app-shell-dark [class*='border-fuchsia-'],
+.app-shell-dark [class*='border-violet-'] {
+  border-color: rgba(251, 146, 60, 0.28) !important;
+}
+
+.app-shell-dark [class*='text-cyan-'],
+.app-shell-dark [class*='text-emerald-'],
+.app-shell-dark [class*='text-sky-'],
+.app-shell-dark [class*='text-fuchsia-'],
+.app-shell-dark [class*='text-violet-'] {
+  color: #fdba74 !important;
 }
 
 .app-shell-dark :is(button, a)[class*='bg-slate-900'],
 .app-shell-dark :is(button, a)[class*='bg-cyan-700'],
-.app-shell-dark :is(button, a)[class*='bg-cyan-500'] {
-  box-shadow: 0 10px 26px -16px rgba(34, 211, 238, 0.85);
+.app-shell-dark :is(button, a)[class*='bg-cyan-500'],
+.app-shell-dark :is(button, a)[class*='bg-emerald-600'],
+.app-shell-dark :is(button, a)[class*='bg-emerald-500'] {
+  box-shadow: 0 10px 26px -16px rgba(251, 146, 60, 0.8);
 }
 
 .app-shell-dark :is(button, a)[class*='bg-slate-900']:hover,
 .app-shell-dark :is(button, a)[class*='bg-cyan-700']:hover,
-.app-shell-dark :is(button, a)[class*='bg-cyan-500']:hover {
+.app-shell-dark :is(button, a)[class*='bg-cyan-500']:hover,
+.app-shell-dark :is(button, a)[class*='bg-emerald-600']:hover,
+.app-shell-dark :is(button, a)[class*='bg-emerald-500']:hover {
   filter: brightness(1.06);
 }
 
@@ -92,10 +161,10 @@ body {
 
 @keyframes pulse-glow {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.28);
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.28);
   }
   100% {
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 12px rgba(251, 146, 60, 0);
   }
 }
 
@@ -132,7 +201,7 @@ body {
 }
 
 @utility brand-title {
-  background-image: linear-gradient(120deg, #0f172a 0%, #0369a1 44%, #10b981 100%);
+  background-image: linear-gradient(120deg, #ffedd5 0%, #fdba74 45%, #f97316 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -143,6 +212,14 @@ body {
   position: absolute;
   border-radius: 9999px;
   filter: blur(1px);
+  pointer-events: none;
+}
+
+@utility bubble-orb {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(251, 146, 60, 0.16);
+  backdrop-filter: blur(10px);
   pointer-events: none;
 }
 

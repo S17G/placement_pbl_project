@@ -141,7 +141,7 @@ const RoadmapGeneratorPage = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'completed': return 'bg-green-100 text-green-800';
-            case 'in-progress': return 'bg-blue-100 text-blue-800';
+            case 'in-progress': return 'bg-orange-100 text-orange-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
@@ -167,7 +167,7 @@ const RoadmapGeneratorPage = () => {
                                 name="targetRole"
                                 value={formData.targetRole}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                 placeholder="e.g., Frontend Developer, Data Scientist"
                                 required
                             />
@@ -181,7 +181,7 @@ const RoadmapGeneratorPage = () => {
                                 name="experienceLevel"
                                 value={formData.experienceLevel}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                             >
                                 <option value="beginner">Beginner (0-2 years)</option>
                                 <option value="intermediate">Intermediate (2-5 years)</option>
@@ -197,7 +197,7 @@ const RoadmapGeneratorPage = () => {
                                 name="timeAvailable"
                                 value={formData.timeAvailable}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                             >
                                 <option value="limited">Limited (5-10 hours/week)</option>
                                 <option value="moderate">Moderate (10-20 hours/week)</option>
@@ -214,14 +214,14 @@ const RoadmapGeneratorPage = () => {
                                     type="text"
                                     value={skillInput}
                                     onChange={(e) => setSkillInput(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                     placeholder="Add a skill..."
                                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                                 />
                                 <button
                                     type="button"
                                     onClick={addSkill}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
                                 >
                                     Add
                                 </button>
@@ -230,13 +230,13 @@ const RoadmapGeneratorPage = () => {
                                 {formData.currentSkills.map((skill, index) => (
                                     <span
                                         key={index}
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800"
                                     >
                                         {skill}
                                         <button
                                             type="button"
                                             onClick={() => removeSkill(skill)}
-                                            className="ml-1 text-blue-600 hover:text-blue-800"
+                                            className="ml-1 text-orange-600 hover:text-orange-800"
                                         >
                                             ×
                                         </button>
@@ -254,14 +254,14 @@ const RoadmapGeneratorPage = () => {
                                     type="text"
                                     value={goalInput}
                                     onChange={(e) => setGoalInput(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                     placeholder="Add a goal..."
                                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGoal())}
                                 />
                                 <button
                                     type="button"
                                     onClick={addGoal}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
                                 >
                                     Add
                                 </button>
@@ -288,7 +288,7 @@ const RoadmapGeneratorPage = () => {
                         <button
                             type="submit"
                             disabled={generating}
-                            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {generating ? 'Generating...' : 'Generate Roadmap'}
                         </button>
@@ -311,7 +311,7 @@ const RoadmapGeneratorPage = () => {
                                     key={roadmap.id}
                                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                                         selectedRoadmap?.id === roadmap.id
-                                            ? 'border-blue-500 bg-blue-50'
+                                            ? 'border-orange-500 bg-orange-50/70'
                                             : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                     onClick={() => setSelectedRoadmap(roadmap)}
@@ -369,7 +369,7 @@ const RoadmapGeneratorPage = () => {
                                     </select>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-2">{phase.description}</p>
-                                <p className="text-xs text-blue-600 mb-3">Duration: {phase.duration}</p>
+                                <p className="text-xs text-orange-600 mb-3">Duration: {phase.duration}</p>
                                 <ul className="text-sm text-gray-700 space-y-1">
                                     {phase.tasks.map((task, index) => (
                                         <li key={index} className="flex items-start">

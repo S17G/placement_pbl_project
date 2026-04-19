@@ -14,12 +14,33 @@ const routes = require('./routes')
 
 const app = express()
 
+const configuredOrigins = String(env.clientUrl || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+const defaultDevOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+]
+
+const allowedOrigins = new Set([...configuredOrigins, ...defaultDevOrigins])
+
 app.set('trust proxy', 1)
 
 app.use(helmet())
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin || allowedOrigins.has(requestOrigin)) {
+        callback(null, true)
+        return
+      }
+
+      callback(new Error('CORS origin not allowed'))
+    },
     credentials: true,
   }),
 )

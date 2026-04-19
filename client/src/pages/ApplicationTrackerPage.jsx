@@ -3,10 +3,10 @@ import toast from 'react-hot-toast'
 import http from '../api/http'
 
 const statusStyles = {
-  Applied: 'bg-sky-900/40 text-sky-200 border border-sky-700/50',
+  Applied: 'bg-orange-900/40 text-orange-200 border border-orange-700/50',
   Interview: 'bg-amber-900/40 text-amber-200 border border-amber-700/50',
   Rejected: 'bg-rose-900/40 text-rose-200 border border-rose-700/50',
-  Selected: 'bg-emerald-900/40 text-emerald-200 border border-emerald-700/50',
+  Selected: 'bg-orange-800/40 text-orange-100 border border-orange-600/50',
 }
 
 const emptyForm = {
@@ -120,7 +120,7 @@ function ApplicationTrackerPage() {
   return (
     <section className="space-y-6 animate-fade-up">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-slate-900">Application Tracker</h1>
+        <h1 className="text-2xl font-bold text-white">Application Tracker</h1>
         <p className="text-sm text-slate-500 sm:text-base">
           Track all your applications, update statuses, and keep notes for every opportunity.
         </p>
@@ -130,13 +130,13 @@ function ApplicationTrackerPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-orange-300/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(20,10,3,0.92))] p-6 shadow-lg shadow-orange-950/20">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Applications</h2>
+              <h2 className="text-xl font-semibold text-white">Applications</h2>
               <p className="mt-1 text-sm text-slate-500">Manage your open applications and progress.</p>
             </div>
-            <button
+              <button
               type="button"
               onClick={() => {
                 setShowForm((value) => !value)
@@ -144,7 +144,7 @@ function ApplicationTrackerPage() {
                   resetForm()
                 }
               }}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-orange-300/45 hover:bg-slate-900"
             >
               {showForm ? 'Hide form' : 'Show form'}
             </button>
@@ -152,7 +152,7 @@ function ApplicationTrackerPage() {
 
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+              <thead className="bg-slate-950/70 text-slate-300">
                 <tr>
                   <th className="px-4 py-3">Company</th>
                   <th className="px-4 py-3">Role</th>
@@ -176,28 +176,28 @@ function ApplicationTrackerPage() {
                   </tr>
                 ) : (
                   applications.map((application) => (
-                    <tr key={application._id} className="border-t border-slate-200">
-                      <td className="px-4 py-4 text-slate-900">{application.companyName}</td>
-                      <td className="px-4 py-4 text-slate-900">{application.role}</td>
+                    <tr key={application._id} className="border-t border-slate-800">
+                      <td className="px-4 py-4 text-white">{application.companyName}</td>
+                      <td className="px-4 py-4 text-white">{application.role}</td>
                       <td className="px-4 py-4">
                         <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[application.status] || 'bg-slate-100 text-slate-700'}`}>
                           {application.status}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-slate-600">{new Date(application.dateApplied).toLocaleDateString()}</td>
-                      <td className="px-4 py-4 text-slate-700">
+                      <td className="px-4 py-4 text-slate-300">{new Date(application.dateApplied).toLocaleDateString()}</td>
+                      <td className="px-4 py-4 text-slate-300">
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => handleEdit(application)}
-                            className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                            className="rounded-2xl border border-cyan-300/20 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-cyan-300/45 hover:bg-slate-900"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(application._id)}
-                            className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                            className="rounded-2xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20"
                           >
                             Delete
                           </button>
@@ -211,10 +211,10 @@ function ApplicationTrackerPage() {
           </div>
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <aside className="rounded-3xl border border-amber-300/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(20,10,3,0.92))] p-6 shadow-lg shadow-amber-950/20">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">{editingId ? 'Edit Application' : 'Add Application'}</h2>
+              <h2 className="text-xl font-semibold text-white">{editingId ? 'Edit Application' : 'Add Application'}</h2>
               <p className="mt-1 text-sm text-slate-500">
                 {editingId ? 'Update application details or status.' : 'Save a new application to your tracker.'}
               </p>
@@ -224,35 +224,35 @@ function ApplicationTrackerPage() {
           {showForm && (
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-semibold text-slate-700">Company</span>
+                <span className="text-sm font-semibold text-slate-200">Company</span>
                 <input
                   name="companyName"
                   value={formValues.companyName}
                   onChange={(event) => setFormValues((prev) => ({ ...prev, companyName: event.target.value }))}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring-2"
+                  className="w-full rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none ring-orange-500 transition placeholder:text-slate-500 focus:border-orange-300 focus:ring-2"
                   placeholder="Company name"
                 />
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-semibold text-slate-700">Role</span>
+                <span className="text-sm font-semibold text-slate-200">Role</span>
                 <input
                   name="role"
                   value={formValues.role}
                   onChange={(event) => setFormValues((prev) => ({ ...prev, role: event.target.value }))}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring-2"
+                  className="w-full rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none ring-orange-500 transition placeholder:text-slate-500 focus:border-orange-300 focus:ring-2"
                   placeholder="Job title or internship role"
                 />
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-slate-700">Status</span>
+                  <span className="text-sm font-semibold text-slate-200">Status</span>
                   <select
                     name="status"
                     value={formValues.status}
                     onChange={(event) => setFormValues((prev) => ({ ...prev, status: event.target.value }))}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring-2"
+                    className="w-full rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none ring-orange-500 transition focus:border-orange-300 focus:ring-2"
                   >
                     <option>Applied</option>
                     <option>Interview</option>
@@ -262,25 +262,25 @@ function ApplicationTrackerPage() {
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-slate-700">Date Applied</span>
+                  <span className="text-sm font-semibold text-slate-200">Date Applied</span>
                   <input
                     type="date"
                     name="dateApplied"
                     value={formValues.dateApplied}
                     onChange={(event) => setFormValues((prev) => ({ ...prev, dateApplied: event.target.value }))}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring-2"
+                    className="w-full rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none ring-orange-500 transition focus:border-orange-300 focus:ring-2"
                   />
                 </label>
               </div>
 
               <label className="block space-y-2">
-                <span className="text-sm font-semibold text-slate-700">Notes</span>
+                <span className="text-sm font-semibold text-slate-200">Notes</span>
                 <textarea
                   name="notes"
                   value={formValues.notes}
                   onChange={(event) => setFormValues((prev) => ({ ...prev, notes: event.target.value }))}
                   rows={4}
-                  className="min-h-[120px] w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring-2"
+                  className="min-h-[120px] w-full rounded-2xl border border-orange-300/20 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none ring-orange-500 transition placeholder:text-slate-500 focus:border-orange-300 focus:ring-2"
                   placeholder="Optional notes about this role or interview steps"
                 />
               </label>
@@ -289,7 +289,7 @@ function ApplicationTrackerPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-2xl border border-orange-200/40 bg-[linear-gradient(135deg,#f97316,#fb923c,#f59e0b)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(251,146,60,0.9)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {editingId ? 'Update Application' : 'Add Application'}
                 </button>
@@ -297,7 +297,7 @@ function ApplicationTrackerPage() {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-950/70 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-orange-400 hover:bg-slate-900"
                   >
                     Cancel edit
                   </button>

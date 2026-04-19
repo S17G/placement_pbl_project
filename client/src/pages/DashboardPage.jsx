@@ -117,7 +117,7 @@ function DashboardPage() {
     connect: {
       title: 'Connect',
       subtitle: 'Strengthen peer network with doubts and collaborative learning.',
-      tone: 'from-cyan-600 to-sky-500',
+      tone: 'from-orange-600 to-amber-500',
       actions: [
         { label: 'Open Discussion', description: 'Post and reply to placement questions.', to: '/discussion' },
         { label: 'Explore FAQs', description: 'Review solved doubts and interview tips.', to: '/faq' },
@@ -126,7 +126,7 @@ function DashboardPage() {
     build: {
       title: 'Build',
       subtitle: 'Shape your profile with company intelligence and resume references.',
-      tone: 'from-violet-600 to-fuchsia-500',
+      tone: 'from-amber-600 to-orange-500',
       actions: [
         { label: 'Resume Library', description: 'Compare and learn from shared resumes.', to: '/resumes' },
         { label: 'Placement Records', description: 'Track eligibility and company process.', to: '/placements' },
@@ -135,7 +135,7 @@ function DashboardPage() {
     execute: {
       title: 'Execute',
       subtitle: 'Move from preparation to action with practical readiness steps.',
-      tone: 'from-emerald-600 to-cyan-500',
+      tone: 'from-orange-500 to-amber-400',
       actions: [
         { label: 'Readiness Check', description: 'Run your current readiness assessment.', to: '/readiness' },
         { label: 'Application Tracker', description: 'Manage applications and follow-ups.', to: '/applications' },
@@ -181,17 +181,17 @@ function DashboardPage() {
       {
         label: 'Peer Knowledge',
         value: Number(stats[1]?.value || 0) + Number(stats[2]?.value || 0),
-        color: 'bg-cyan-500',
+        color: 'bg-orange-500',
       },
       {
         label: 'Market Coverage',
         value: Number(stats[0]?.value || 0),
-        color: 'bg-emerald-500',
+        color: 'bg-amber-500',
       },
       {
         label: 'Profile Strength',
         value: Number(stats[3]?.value || 0),
-        color: 'bg-violet-500',
+        color: 'bg-orange-300',
       },
     ],
     [stats],
@@ -214,14 +214,14 @@ function DashboardPage() {
 
   return (
     <section className="space-y-6 animate-fade-up">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-700 to-emerald-600 p-8 text-white shadow-lg sm:p-10">
-        <p className="text-sm font-semibold uppercase tracking-widest text-cyan-100">
+      <div className="rounded-3xl border border-orange-300/20 bg-gradient-to-r from-slate-950 via-orange-950 to-amber-950 p-8 text-white shadow-[0_30px_90px_-30px_rgba(251,146,60,0.5)] sm:p-10">
+        <p className="text-sm font-semibold uppercase tracking-widest text-orange-100">
           Placement Dashboard
         </p>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <h1 className="text-3xl font-extrabold sm:text-4xl">Welcome back, {currentUser.name || 'Placement Aspirant'}</h1>
-            <p className="mt-3 text-sm leading-6 text-cyan-100 sm:text-base">
+            <p className="mt-3 text-sm leading-6 text-orange-100 sm:text-base">
               Monitor your preparation, explore community resources, and access the right tools for every placement step.
             </p>
           </div>
@@ -234,7 +234,7 @@ function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-4">
         {animatedStats.map((item) => (
-          <article key={item.label} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <article key={item.label} className="rounded-3xl border border-orange-300/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.9))] p-6 shadow-lg shadow-orange-950/20">
             <p className="text-sm text-slate-500">{item.label}</p>
             <p className="mt-3 text-3xl font-bold text-slate-900">{item.value}</p>
           </article>
@@ -242,8 +242,8 @@ function DashboardPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Preparation Control Center</h2>
+        <div className="rounded-3xl border border-orange-300/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(20,10,3,0.92))] p-6 shadow-lg shadow-orange-950/15">
+          <h2 className="text-xl font-semibold text-white">Preparation Control Center</h2>
           <p className="mt-2 text-sm text-slate-500">Switch zones and jump into the right task for your current placement stage.</p>
 
           <div className="mt-5 flex flex-wrap gap-2">
@@ -258,8 +258,8 @@ function DashboardPage() {
                 onClick={() => setActiveZone(zone.key)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   activeZone === zone.key
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                    ? 'border border-orange-200/50 bg-orange-400 text-slate-950 shadow-md'
+                    : 'border border-slate-700/70 bg-slate-950/70 text-slate-300 hover:border-orange-300/40 hover:bg-slate-900'
                 }`}
               >
                 {zone.label}
@@ -275,8 +275,8 @@ function DashboardPage() {
                 onClick={() => setActiveZone(counter.key)}
                 className={`rounded-2xl border px-3 py-3 text-left transition ${
                   activeZone === counter.key
-                    ? 'border-slate-900 bg-slate-900 text-white shadow-md'
-                    : 'border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50'
+                    ? 'border-orange-300/60 bg-orange-400/15 text-orange-50 shadow-md'
+                    : 'border-slate-700/70 bg-slate-950/70 hover:border-orange-300/40 hover:bg-slate-900'
                 }`}
               >
                 <p className={`text-[11px] font-semibold uppercase ${activeZone === counter.key ? 'text-slate-200' : 'text-slate-500'}`}>
@@ -290,7 +290,7 @@ function DashboardPage() {
             ))}
           </div>
 
-          <div className={`mt-5 rounded-3xl bg-gradient-to-r ${activeZoneData.tone} p-5 text-white shadow-md`}>
+          <div className={`mt-5 rounded-3xl border border-white/10 bg-gradient-to-r ${activeZoneData.tone} p-5 text-white shadow-md`}>
             <p className="text-lg font-bold">{activeZoneData.title}</p>
             <p className="mt-1 text-sm text-white/85">{activeZoneData.subtitle}</p>
           </div>
@@ -301,25 +301,25 @@ function DashboardPage() {
                 key={action.label}
                 type="button"
                 onClick={() => navigate(action.to)}
-                className="group rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-50"
+                className="group rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-orange-300/40 hover:bg-slate-900"
               >
-                <span className="block text-base font-semibold text-slate-900 group-hover:text-cyan-800">{action.label}</span>
+                <span className="block text-base font-semibold text-white group-hover:text-orange-200">{action.label}</span>
                 <span className="mt-1 block text-sm text-slate-600">{action.description}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Activity Graph Snapshot</h2>
+          <div className="rounded-3xl border border-amber-300/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(20,10,3,0.92))] p-6 shadow-lg shadow-amber-950/15">
+            <h2 className="text-xl font-semibold text-white">Activity Graph Snapshot</h2>
           <p className="mt-2 text-sm text-slate-500">A live visual of your platform activity and relationship between learning and opportunity signals.</p>
 
-          <div className="mt-4 inline-flex rounded-full border border-slate-300 p-1 text-xs font-semibold">
+            <div className="mt-4 inline-flex rounded-full border border-slate-700 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setActiveGraph('trend')}
               className={`rounded-full px-3 py-1 transition ${
-                activeGraph === 'trend' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+                  activeGraph === 'trend' ? 'bg-orange-400 text-slate-950' : 'text-slate-300 hover:bg-slate-900'
               }`}
             >
               Trend Line
@@ -328,14 +328,14 @@ function DashboardPage() {
               type="button"
               onClick={() => setActiveGraph('relation')}
               className={`rounded-full px-3 py-1 transition ${
-                activeGraph === 'relation' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+                activeGraph === 'relation' ? 'bg-orange-400 text-slate-950' : 'text-slate-300 hover:bg-slate-900'
               }`}
             >
               Relation View
             </button>
           </div>
 
-          <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-5 rounded-3xl border border-slate-700 bg-slate-950/70 p-4">
             {activeGraph === 'trend' ? (
               <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="h-56 w-full" role="img" aria-label="Dashboard activity line graph">
                 <defs>
@@ -351,11 +351,11 @@ function DashboardPage() {
 
                 {chartPoints.map((point) => (
                   <g key={point.label}>
-                    <circle cx={point.x} cy={point.y} r="6" fill="#ffffff" stroke="#0891b2" strokeWidth="3" />
-                    <text x={point.x} y={point.y - 12} textAnchor="middle" className="fill-slate-700 text-[11px] font-semibold">
+                    <circle cx={point.x} cy={point.y} r="6" fill="#0f172a" stroke="#fb923c" strokeWidth="3" />
+                    <text x={point.x} y={point.y - 12} textAnchor="middle" className="fill-slate-200 text-[11px] font-semibold">
                       {point.value}
                     </text>
-                    <text x={point.x} y={chartHeight - 6} textAnchor="middle" className="fill-slate-500 text-[11px] font-medium">
+                    <text x={point.x} y={chartHeight - 6} textAnchor="middle" className="fill-slate-400 text-[11px] font-medium">
                       {point.label}
                     </text>
                   </g>
@@ -365,11 +365,11 @@ function DashboardPage() {
               <div className="space-y-3">
                 {relationMetrics.map((metric) => (
                   <div key={metric.label}>
-                    <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-600">
+                    <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-300">
                       <span>{metric.label}</span>
                       <span>{metric.value}</span>
                     </div>
-                    <div className="h-3 rounded-full bg-slate-200">
+                    <div className="h-3 rounded-full bg-slate-800">
                       <div
                         className={`h-3 rounded-full ${metric.color} transition-all duration-500`}
                         style={{ width: `${Math.max((metric.value / maxRelationValue) * 100, metric.value ? 8 : 0)}%` }}
@@ -377,7 +377,7 @@ function DashboardPage() {
                     </div>
                   </div>
                 ))}
-                <p className="pt-1 text-xs text-slate-500">
+                <p className="pt-1 text-xs text-slate-400">
                   Relation View compares knowledge activity, market coverage, and profile strength to highlight balance in preparation.
                 </p>
               </div>
@@ -390,10 +390,10 @@ function DashboardPage() {
                 key={metric.label}
                 type="button"
                 onClick={() => navigate(metric.to)}
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-cyan-300 hover:bg-cyan-50"
+                className="flex items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-left transition hover:border-orange-300/40 hover:bg-slate-900"
               >
-                <span className="text-sm font-semibold text-slate-800">{metric.label}</span>
-                <span className="text-base font-bold text-slate-900">{metric.value}</span>
+                <span className="text-sm font-semibold text-slate-200">{metric.label}</span>
+                <span className="text-base font-bold text-white">{metric.value}</span>
               </button>
             ))}
           </div>

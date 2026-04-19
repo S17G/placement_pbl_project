@@ -198,7 +198,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
             to={isAuthenticated ? (role === 'admin' ? '/admin' : '/dashboard') : '/'}
             className="group flex items-center gap-2"
           >
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_0_6px_rgba(14,116,144,0.14)]" />
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_6px_rgba(251,146,60,0.14)]" />
             <span className="text-xl font-extrabold brand-title transition group-hover:brightness-110">
               PlaceMate
             </span>
@@ -211,9 +211,9 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
               <NavLink
                 to="/profile"
                 onClick={onCloseSidebar}
-                className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-400/60 hover:bg-slate-800"
+                className="flex items-center gap-3 rounded-3xl border border-orange-950/70 bg-slate-900 p-4 transition hover:border-orange-400/60 hover:bg-slate-800"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-sm font-bold text-cyan-100">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-sm font-bold text-orange-100">
                   {initials}
                 </span>
                 <div>
@@ -237,7 +237,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 className={({ isActive }) =>
                   `rounded-3xl border px-4 py-3 text-sm font-semibold ${
                     isActive
-                      ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                      ? 'border-orange-500/70 bg-orange-500/15 text-orange-200'
                       : 'border-slate-700 text-slate-200 hover:bg-slate-900'
                   }`
                 }
@@ -249,7 +249,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                 className={({ isActive }) =>
                   `rounded-3xl border px-4 py-3 text-sm font-semibold ${
                     isActive
-                      ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                      ? 'border-orange-500/70 bg-orange-500/15 text-orange-200'
                       : 'border-slate-700 text-slate-200 hover:bg-slate-900'
                   }`
                 }
@@ -277,7 +277,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
                         isActive
-                          ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                          ? 'border-orange-500/70 bg-orange-500/15 text-orange-200'
                           : 'border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-900'
                       }`
                     }
@@ -315,7 +315,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
                   isActive
-                    ? 'border-cyan-500/70 bg-cyan-500/15 text-cyan-200'
+                    ? 'border-orange-500/70 bg-orange-500/15 text-orange-200'
                     : 'border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-900'
                 }`
               }
