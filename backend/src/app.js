@@ -26,7 +26,9 @@ const defaultDevOrigins = [
   'http://127.0.0.1:5174',
 ]
 
-const allowedOrigins = new Set([...configuredOrigins, ...defaultDevOrigins])
+const defaultProductionOrigins = ['https://placement-pbl-project.vercel.app']
+
+const allowedOrigins = new Set([...configuredOrigins, ...defaultDevOrigins, ...defaultProductionOrigins])
 
 function isLocalDevOrigin(origin) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
