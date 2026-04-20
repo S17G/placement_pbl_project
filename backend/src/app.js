@@ -28,13 +28,21 @@ const defaultDevOrigins = [
 
 const allowedOrigins = new Set([...configuredOrigins, ...defaultDevOrigins])
 
+function isLocalDevOrigin(origin) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
+}
+
 app.set('trust proxy', 1)
 
 app.use(helmet())
 app.use(
   cors({
     origin: (requestOrigin, callback) => {
-      if (!requestOrigin || allowedOrigins.has(requestOrigin)) {
+      if (
+        !requestOrigin ||
+        allowedOrigins.has(requestOrigin) ||
+        (env.nodeEnv !== 'production' && isLocalDevOrigin(requestOrigin))
+      ) {
         callback(null, true)
         return
       }
