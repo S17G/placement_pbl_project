@@ -1,0 +1,557 @@
+import { useState, useEffect, useMemo } from 'react'
+import { 
+  BarChart3, 
+  Search, 
+  Plus, 
+  X, 
+  CheckCircle2,
+  ChevronRight,
+  TrendingUp,
+  Clock,
+  Briefcase,
+  Target,
+  ExternalLink,
+  BookOpen,
+  Video,
+  Code2,
+  Pencil,
+  Check,
+  LayoutGrid
+} from 'lucide-react'
+import axios from 'axios'
+import toast, { Toaster } from 'react-hot-toast'
+
+const AI_BASE_URL = 'http://localhost:8000/api/v1'
+
+export default function SkillGapAuditPage() {
+  // --- STATE ---
+  const [activeTab, setActiveTab] = useState('company') // 'role' | 'company' | 'ctc'
+  const [loading, setLoading] = useState(false)
+  const [metadata, setMetadata] = useState({ roles: [], companies: [], ctc_brackets: [] })
+  
+  const [searchQuery, setSearchQuery] = useState('')
+  const [studentSkills, setStudentSkills] = useState(['Java', 'Data Structures & Algorithms', 'OOP', 'HTML', 'CSS'])
+  const [newSkill, setNewSkill] = useState('')
+  
+  const [selectedTarget, setSelectedTarget] = useState(null)
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [editableRoadmap, setEditableRoadmap] = useState([]) // editable copy of roadmap_blocks
+  const [editingCell, setEditingCell] = useState(null) // { blockIdx, taskIdx } | null
+  const [editValue, setEditValue] = useState('')
+
+  const [chatMessage, setChatMessage] = useState('')
+  const [chatHistory, setChatHistory] = useState([])
+  const [isChatLoading, setIsChatLoading] = useState(false)
+
+  // --- EFFECTS ---
+  useEffect(() => {
+    fetchMetadata()
+  }, [])
+
+  const fetchMetadata = async () => {
+    try {
+      const resp = await axios.get(`${AI_BASE_URL}/metadata`)
+      setMetadata({
+        roles: resp.data.roles || [],
+        companies: resp.data.companies || [],
+        ctc_brackets: resp.data.ctc_brackets || []
+      })
+    } catch (err) {
+      if (err.response && err.response.status === 503) {
+        toast.loading('AI Service is warming up. Loading placement data from MongoDB...', { id: 'api-warmup' })
+        setTimeout(fetchMetadata, 3000) // Retry in 3s
+      } else {
+        console.error('AI Service connectivity issue', err)
+        toast.error('AI Service not reachable. Please ensure port 8000 is active.', { id: 'api-error' })
+      }
+    }
+  }
+
+  // Filter items based on search and active tab
+  const filteredItems = useMemo(() => {
+    const query = searchQuery.toLowerCase()
+    if (activeTab === 'company') {
+      return metadata.companies.filter(c => c.toLowerCase().includes(query))
+    } else if (activeTab === 'role') {
+      return metadata.roles.filter(r => r.toLowerCase().includes(query))
+    } else if (activeTab === 'ctc') {
+      return metadata.ctc_brackets.filter(b => b.toLowerCase().includes(query))
+    }
+    return []
+  }, [metadata, activeTab, searchQuery])
+
+  const handleSelectTarget = async (item) => {
+    setLoading(true)
+    try {
+      const studentId = JSON.parse(sessionStorage.getItem('pmCurrentUser') || '{}').email || 'guest'
+      const payload = {
+        student_id: studentId,
+        user_skills: studentSkills,
+        target_role: activeTab === 'role' ? item : 'Software Development Engineer',
+        target_ctc_bracket: activeTab === 'ctc' ? item : 'Any',
+        target_company: activeTab === 'company' ? item : 'Any',
+        background: 'Computer Science' 
+      }
+      
+      const resp = await axios.post(`${AI_BASE_URL}/generate-roadmap`, payload)
+      
+      if (resp.data.error) {
+        toast.error(resp.data.error)
+      } else {
+        setAnalysisResult(resp.data)
+        setSelectedTarget(item)
+        setEditableRoadmap(resp.data.roadmap_blocks || [])
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.detail || 'Analysis failed. Check your API key or backend logs.'
+      toast.error(errMsg, { id: 'analysis-error', duration: 5000 })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim()) return
+    const msg = chatMessage
+    setChatMessage('')
+    setChatHistory(prev => [...prev, { role: 'user', content: msg }])
+    setIsChatLoading(true)
+    
+    try {
+      const studentId = JSON.parse(sessionStorage.getItem('pmCurrentUser') || '{}').email || 'guest'
+      const resp = await axios.post(`${AI_BASE_URL}/chat`, {
+        student_id: studentId,
+        message: msg
+      })
+      setChatHistory(prev => [...prev, { role: 'assistant', content: resp.data.response }])
+    } catch (err) {
+      toast.error('Chat context failed')
+    } finally {
+      setIsChatLoading(false)
+    }
+  }
+
+  const addSkill = (skill) => {
+    if (skill && !studentSkills.includes(skill)) {
+      setStudentSkills([...studentSkills, skill])
+    }
+    setNewSkill('')
+  }
+
+  const removeSkill = (skill) => {
+    setStudentSkills(studentSkills.filter(s => s !== skill))
+  }
+
+  // --- EDITABLE ROADMAP HANDLERS ---
+  const startEditTask = (blockIdx, taskIdx) => {
+    setEditingCell({ blockIdx, taskIdx })
+    setEditValue(editableRoadmap[blockIdx].tasks[taskIdx])
+  }
+
+  const saveEditTask = () => {
+    if (!editingCell) return
+    const { blockIdx, taskIdx } = editingCell
+    const updated = editableRoadmap.map((block, bi) =>
+      bi === blockIdx
+        ? { ...block, tasks: block.tasks.map((t, ti) => ti === taskIdx ? editValue : t) }
+        : block
+    )
+    setEditableRoadmap(updated)
+    setEditingCell(null)
+  }
+
+  const addTaskToBlock = (blockIdx) => {
+    const updated = editableRoadmap.map((block, bi) =>
+      bi === blockIdx ? { ...block, tasks: [...block.tasks, 'New task — click to edit'] } : block
+    )
+    setEditableRoadmap(updated)
+    startEditTask(blockIdx, updated[blockIdx].tasks.length - 1)
+  }
+
+  const removeTaskFromBlock = (blockIdx, taskIdx) => {
+    const updated = editableRoadmap.map((block, bi) =>
+      bi === blockIdx ? { ...block, tasks: block.tasks.filter((_, ti) => ti !== taskIdx) } : block
+    )
+    setEditableRoadmap(updated)
+  }
+
+  const RESOURCE_ICON = { course: BookOpen, video: Video, practice: Code2 }
+  const RESOURCE_COLOR = { course: 'text-blue-400 border-blue-500/30 bg-blue-500/10', video: 'text-rose-400 border-rose-500/30 bg-rose-500/10', practice: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' }
+  const BLOCK_COLORS = [
+    'border-orange-500/40 bg-orange-500/5',
+    'border-blue-500/40 bg-blue-500/5',
+    'border-violet-500/40 bg-violet-500/5',
+    'border-emerald-500/40 bg-emerald-500/5',
+  ]
+  const BLOCK_HEADER_COLORS = ['text-orange-400', 'text-blue-400', 'text-violet-400', 'text-emerald-400']
+  const BLOCK_NUM_BG = ['bg-orange-500/20 border-orange-500/30 text-orange-400', 'bg-blue-500/20 border-blue-500/30 text-blue-400', 'bg-violet-500/20 border-violet-500/30 text-violet-400', 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400']
+
+  return (
+    <div className="relative min-h-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans">
+      <Toaster position="top-right" />
+      
+      {/* Background Orbs */}
+      <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-orange-500/10 blur-[128px] pointer-events-none" />
+      <div className="absolute top-1/2 -left-24 h-64 w-64 rounded-full bg-amber-500/5 blur-[96px] pointer-events-none" />
+
+      <main className="relative z-10 flex h-screen overflow-hidden p-6 gap-6">
+        
+        {/* LEFT PANE - Navigation & Selection */}
+        <section className="w-80 flex flex-col gap-6 shrink-0">
+          
+          {/* Tab Switcher */}
+          <div className="flex flex-col gap-2 rounded-3xl border border-slate-800 bg-slate-900/40 p-2 backdrop-blur-xl shadow-2xl">
+            <button 
+              onClick={() => { setActiveTab('role'); setSearchQuery(''); }}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'role' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <LayoutGrid className="h-5 w-5" />
+              <div className="text-left">
+                <p className="text-sm font-bold">By Job Role</p>
+                <p className="text-[10px] opacity-60">Match against a role</p>
+              </div>
+            </button>
+            <button 
+              onClick={() => { setActiveTab('company'); setSearchQuery(''); }}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'company' ? 'bg-orange-500/10 border border-orange-500/40 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <Briefcase className="h-5 w-5" />
+              <div className="text-left">
+                <p className="text-sm font-bold">By Company</p>
+                <p className="text-[10px] opacity-60">Match against a company</p>
+              </div>
+            </button>
+            <button 
+              onClick={() => { setActiveTab('ctc'); setSearchQuery(''); }}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'ctc' ? 'bg-orange-500/10 border border-orange-500/40 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <TrendingUp className="h-5 w-5" />
+              <div className="text-left">
+                <p className="text-sm font-bold">By Salary / CTC</p>
+                <p className="text-[10px] opacity-60">Fiter by pay bracket</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Selection List */}
+          <div className="flex-1 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-slate-800">
+              <h3 className="text-sm font-bold text-slate-100 mb-4">Select target ({filteredItems.length})</h3>
+              <div className="relative group">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500 group-focus-within:text-orange-400" />
+                <input 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Search ${activeTab}s...`}
+                  className="w-full rounded-2xl border border-slate-800 bg-slate-950/50 py-2.5 pl-10 pr-4 text-xs text-slate-200 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-600"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              {filteredItems.map(item => (
+                <button 
+                  key={item}
+                  onClick={() => handleSelectTarget(item)}
+                  className={`w-full group relative flex items-center gap-3 rounded-2xl border p-3 transition-all ${selectedTarget === item ? 'bg-orange-500/10 border-orange-500/40 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'bg-slate-950/30 border-slate-800/50 hover:bg-slate-800 hover:border-slate-700'}`}
+                >
+                  <div className={`h-8 w-8 shrink-0 flex items-center justify-center rounded-xl bg-slate-900 text-xs font-bold uppercase transition-colors ${selectedTarget === item ? 'text-orange-400 border border-orange-500/20' : 'text-slate-500'}`}>
+                    {activeTab === 'ctc' ? <TrendingUp className="h-4 w-4" /> : item[0]}
+                  </div>
+                  <span className={`text-[11px] font-bold truncate ${selectedTarget === item ? 'text-orange-200' : 'text-slate-300'}`}>{item}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Your Skills Sidebar */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-xl shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Your skills</h3>
+              <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-bold">{studentSkills.length} skills</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-4 max-h-32 overflow-y-auto">
+              {studentSkills.map(s => (
+                <span key={s} className="flex items-center gap-1 rounded-lg bg-slate-800/80 border border-slate-700/50 px-2.5 py-1 text-[10px] text-slate-300 transition hover:bg-slate-700">
+                  {s} <X className="h-3 w-3 cursor-pointer hover:text-rose-400" onClick={() => removeSkill(s)} />
+                </span>
+              ))}
+            </div>
+            <div className="relative group">
+              <Plus className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500 group-focus-within:text-orange-400" />
+              <input 
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addSkill(newSkill)}
+                placeholder="Add a skill..."
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/50 py-2 pl-8 pr-3 text-[10px] text-slate-200 focus:border-orange-500/50 outline-none transition-all"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* RIGHT PANE - Analysis Result */}
+        <section className="flex-1 flex flex-col gap-6 overflow-hidden">
+          {analysisResult ? (
+            <>
+              {/* Header Box */}
+              <div className="rounded-[40px] border border-slate-800 bg-slate-900/50 p-10 backdrop-blur-3xl shadow-2xl">
+                <div className="flex items-center justify-between mb-10 gap-10">
+                  <div className="space-y-4">
+                    <h1 className="text-4xl font-extrabold text-slate-100">{selectedTarget}</h1>
+                    <div className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-tighter text-orange-400 border border-orange-500/20">
+                      Company analysis
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-3 flex-1 max-w-sm">
+                    <div className="w-full flex items-center gap-4">
+                      <div className="flex-1 h-3 rounded-full bg-slate-800/80 overflow-hidden shadow-inner">
+                        <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-1000 ease-out" style={{ width: `${analysisResult.match_percentage}%` }} />
+                      </div>
+                      <span className="text-lg font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">{analysisResult.match_percentage}% match</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">{analysisResult.matched_count} matched • {analysisResult.missing_count} missing</p>
+                  </div>
+                  <div className="shrink-0 text-center space-y-1 bg-slate-800/80 px-4 py-3 rounded-2xl border border-slate-700/50">
+                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Priority skill:</p>
+                    <div className="rounded-lg bg-orange-500 text-slate-950 px-3 py-1 text-xs font-black uppercase tracking-tight shadow-lg shadow-orange-500/20">
+                      {analysisResult.priority_skill || 'SQL'}
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-bold flex items-center justify-center gap-1 mt-1"><Clock className="h-3 w-3" /> ~{analysisResult.estimated_preparation_days || 35} days</p>
+                  </div>
+                </div>
+
+                {/* Analysis Box */}
+                <div className="mb-10 rounded-[30px] border border-emerald-500/30 bg-emerald-500/5 p-8 backdrop-blur-md">
+                   <h5 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400/60">Analysis Summary</h5>
+                   <p className="text-slate-200 leading-relaxed text-[15px] font-medium italic opacity-90">
+                     "{analysisResult.analysis_summary}"
+                   </p>
+                   <div className="mt-6 flex items-center gap-3 text-emerald-400 text-xs font-bold py-2 px-4 rounded-xl bg-emerald-500/10 w-fit border border-emerald-500/20">
+                     <CheckCircle2 className="h-4 w-4" /> {analysisResult.readiness_status}
+                   </div>
+                </div>
+
+                {/* Skills Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-6">
+                    <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                      Skills you already have <span className="text-emerald-500 ml-2 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">✓ {analysisResult.matched_count}</span>
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                       {analysisResult.skills_already_have.map(s => (
+                         <span key={s} className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-200">
+                           {s}
+                         </span>
+                       ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                      Skills to develop <span className="text-rose-500 ml-2 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">⚠ {analysisResult.missing_count}</span>
+                    </h4>
+                    <div className="space-y-3">
+                      {analysisResult.skills_to_develop.map(item => (
+                        <div key={item.skill} className="flex items-center justify-between rounded-2xl bg-slate-950/40 p-4 border border-slate-800/80 group hover:border-rose-500/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <span className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+                            <span className="font-bold text-slate-200 group-hover:text-white transition-colors">{item.skill}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[9px] font-black text-orange-400 uppercase tracking-tight border border-orange-500/20">{item.tag || 'Critical'}</span>
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><Clock className="h-3 w-3" /> ~{item.est_days || 14}d</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat & Roadmap Row */}
+              <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+                {/* EDITABLE BLOCK DIAGRAM ROADMAP */}
+                <div className="col-span-8 overflow-y-auto custom-scrollbar pb-10">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-lg font-bold flex items-center gap-2"><Target className="h-5 w-5 text-orange-400" /> 8-Week Placement Roadmap</h2>
+                    <span className="text-[10px] text-slate-500 border border-slate-700 rounded-lg px-2 py-1">Click any task to edit</span>
+                  </div>
+
+                  {/* Timeline connector row */}
+                  <div className="space-y-0">
+                    {editableRoadmap.map((block, idx) => (
+                      <div key={idx}>
+                        {/* Phase Block */}
+                        <div className={`rounded-2xl border p-5 transition-all ${BLOCK_COLORS[idx % BLOCK_COLORS.length]} backdrop-blur-md`}>
+                          {/* Block Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`h-7 w-7 shrink-0 rounded-xl flex items-center justify-center text-[11px] font-black border ${BLOCK_NUM_BG[idx % BLOCK_NUM_BG.length]}`}>{idx + 1}</div>
+                              <div>
+                                <p className={`text-xs font-black uppercase tracking-widest ${BLOCK_HEADER_COLORS[idx % BLOCK_HEADER_COLORS.length]}`}>{block.title}</p>
+                                {block.skills_covered && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {block.skills_covered.map(s => (
+                                      <span key={s} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-400">{s}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <button onClick={() => addTaskToBlock(idx)} className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-orange-400 border border-slate-700 hover:border-orange-500/40 rounded-lg px-2 py-1 transition-all">
+                              <Plus className="h-3 w-3" /> Task
+                            </button>
+                          </div>
+
+                          {/* Tasks List */}
+                          <ul className="space-y-2 mb-5">
+                            {block.tasks.map((task, ti) => (
+                              <li key={ti} className="group flex items-start gap-2">
+                                <ChevronRight className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${BLOCK_HEADER_COLORS[idx % BLOCK_HEADER_COLORS.length]} opacity-60`} />
+                                {editingCell?.blockIdx === idx && editingCell?.taskIdx === ti ? (
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <input
+                                      autoFocus
+                                      value={editValue}
+                                      onChange={e => setEditValue(e.target.value)}
+                                      onKeyDown={e => { if (e.key === 'Enter') saveEditTask(); if (e.key === 'Escape') setEditingCell(null) }}
+                                      className="flex-1 bg-slate-900 border border-orange-500/50 rounded-lg px-2 py-1 text-[11px] text-slate-200 outline-none"
+                                    />
+                                    <button onClick={saveEditTask} className="text-emerald-400 hover:text-emerald-300"><Check className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => removeTaskFromBlock(idx, ti)} className="text-rose-500/60 hover:text-rose-400"><X className="h-3.5 w-3.5" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex-1 flex items-start justify-between gap-2">
+                                    <span className="text-[11px] text-slate-300 leading-tight flex-1">{task}</span>
+                                    <button onClick={() => startEditTask(idx, ti)} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-orange-400">
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+
+                          {/* Resources */}
+                          {block.resources && block.resources.length > 0 && (
+                            <div className="pt-3 border-t border-slate-700/30">
+                              <p className="text-[9px] uppercase text-slate-600 font-black tracking-widest mb-2">Course Resources</p>
+                              <div className="flex flex-wrap gap-2">
+                                {block.resources.map((res, ri) => {
+                                  const resObj = typeof res === 'object' ? res : { label: 'Resource', url: res, type: 'course' }
+                                  const IconComp = RESOURCE_ICON[resObj.type] || BookOpen
+                                  const colorClass = RESOURCE_COLOR[resObj.type] || RESOURCE_COLOR.course
+                                  return (
+                                    <a
+                                      key={ri}
+                                      href={resObj.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold transition-all hover:scale-105 ${colorClass}`}
+                                    >
+                                      <IconComp className="h-3 w-3" />
+                                      {resObj.label || 'Resource'}
+                                      <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                    </a>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Arrow connector between blocks */}
+                        {idx < editableRoadmap.length - 1 && (
+                          <div className="flex justify-center py-1">
+                            <div className="w-px h-5 bg-gradient-to-b from-slate-700 to-transparent" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="col-span-4 flex flex-col rounded-[32px] border border-slate-800 bg-slate-900/40 backdrop-blur-xl shadow-2xl overflow-hidden min-h-0 mb-10">
+                   <div className="border-b border-slate-800/50 p-6 bg-slate-950/30">
+                      <h3 className="flex items-center gap-3 font-black text-slate-100 uppercase tracking-widest text-xs">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        Career Assistant
+                      </h3>
+                   </div>
+                   <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                      <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
+                         <p className="text-[11px] italic text-orange-200/80 leading-relaxed font-medium">"I'm ready to help you specialize for **{analysisResult.company_name}**. Ask me about the specific roadmap steps or interview questions!"</p>
+                      </div>
+                      {chatHistory.map((msg, i) => (
+                        <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                          <div className={`max-w-[90%] rounded-2xl px-4 py-3 text-[13px] ${msg.role === 'user' ? 'bg-orange-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-200 border border-slate-700'}`}>
+                            {msg.content}
+                          </div>
+                        </div>
+                      ))}
+                      {isChatLoading && <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse ml-2 flex items-center gap-2"><div className="h-1 w-1 bg-slate-500 rounded-full animate-bounce" /> Analyzing query...</div>}
+                   </div>
+                   <div className="p-6 border-t border-slate-800/50 bg-slate-950/30">
+                      <div className="relative group">
+                        <input 
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                          placeholder="Ask a refinement..." 
+                          className="w-full rounded-2xl border border-slate-800 bg-slate-950 py-4 pl-5 pr-12 text-[13px] text-slate-200 outline-none focus:border-orange-500/50 transition-all font-medium placeholder:text-slate-700 shadow-inner"
+                        />
+                        <button 
+                          onClick={handleSendMessage}
+                          disabled={isChatLoading}
+                          className="absolute right-2 top-2 rounded-xl bg-orange-500 p-2 text-slate-950 hover:bg-orange-400 disabled:opacity-50 shadow-lg"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-slate-900/20 rounded-[40px] border border-dashed border-slate-800">
+               <div className="h-20 w-20 rounded-3xl bg-slate-950 flex items-center justify-center mb-8 border border-white/5 shadow-2xl">
+                 <Search className="h-10 w-10 text-orange-500/40" />
+               </div>
+               <h2 className="text-2xl font-bold mb-4">Select a target to begin</h2>
+               <p className="text-slate-500 max-w-sm text-sm">Choose a job role or specific company from the left panel to run an instant skill gap audit against real PiCT data.</p>
+            </div>
+          )}
+        </section>
+      </main>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f172a]/80 backdrop-blur-3xl">
+          <div className="relative">
+            <div className="h-24 w-24 animate-spin rounded-[30%] border-4 border-slate-800 border-t-orange-500 shadow-[0_0_50px_rgba(249,115,22,0.2)]"></div>
+            <BarChart3 className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-orange-500 animate-pulse" />
+          </div>
+          <p className="mt-8 font-black text-orange-400 animate-pulse uppercase tracking-[0.4em] text-xs">Deep Audit In Progress</p>
+        </div>
+      )}
+
+      {/* Global CSS for scrollbar */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(45, 55, 72, 0.4);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(249, 115, 22, 0.2);
+        }
+      `}</style>
+    </div>
+  )
+}

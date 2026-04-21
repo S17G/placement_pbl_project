@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Briefcase, FileText, HelpCircle, Home, MessageCircle, Map, ShieldCheck, User, ClipboardList } from 'lucide-react'
+import { BarChart3, Briefcase, FileText, HelpCircle, Home, MessageCircle, Map, ShieldCheck, User, ClipboardList, Search } from 'lucide-react'
 import http from '../../api/http'
 
 const TAB_SEEN_AT_KEY = 'pmStudentTabSeenAt'
@@ -60,6 +60,7 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
     { to: '/internships', label: 'Internships', icon: Briefcase },
     { to: '/placements', label: 'Placements', icon: BarChart3 },
     { to: '/readiness', label: 'Readiness Check', icon: ShieldCheck },
+    { to: '/skill-gap-audit', label: 'Skill Gap Audit', icon: Search },
   ]
 
   const markTabAsSeen = useCallback((tabKey) => {

@@ -14,6 +14,7 @@ import RoadmapGeneratorPage from './pages/RoadmapGeneratorPage'
 import RegisterPage from './pages/RegisterPage'
 import ResumeLibraryPage from './pages/ResumeLibraryPage'
 import ProfilePage from './pages/ProfilePage'
+import SkillGapAuditPage from './pages/SkillGapAuditPage'
 
 const isAuthenticated = () => sessionStorage.getItem('pmAuth') === 'true'
 const getRole = () => sessionStorage.getItem('pmRole') || 'student'
@@ -152,6 +153,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="student">
               <PlacementReadinessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skill-gap-audit"
+          element={
+            <ProtectedRoute allowedRole="student">
+              <SkillGapAuditPage />
             </ProtectedRoute>
           }
         />
