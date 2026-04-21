@@ -126,6 +126,10 @@ async def generate_roadmap(req: RoadmapRequest):
         print(f"[ERROR] Roadmap Generation Failed: {result['error']}")
         raise HTTPException(status_code=500, detail=result['error'])
 
+    # Log which provider was used
+    provider = result.get("_provider", "gemini")
+    print(f"[LLM] Roadmap served by: {provider.upper()}")
+
     # Save to MongoDB roadmaps collection
     roadmap_id = await db_manager.save_session(req.student_id, result, "roadmaps")
     result['roadmap_id'] = roadmap_id
@@ -150,7 +154,7 @@ async def chat_with_assistant(req: ChatRequest):
     latest_roadmap = await db_manager.get_latest_roadmap(req.student_id)
     roadmap_context = f"Student's Current Roadmap: {latest_roadmap['analysis_summary']}" if latest_roadmap else ""
 
-    # 3. Prompt Gemini
+    # 3. Build prompt
     prompt = f"""
     You are a career assistant for the Placemate platform. 
     You recognize the student across sessions.
@@ -166,21 +170,19 @@ async def chat_with_assistant(req: ChatRequest):
     Respond in a personalized, helpful way based on their history. If they ask for changes, tell them you'll update the plan.
     """
 
+    # 4. Use shared chat logic for the core response
     try:
-        # We can use the generator's client for chat too
-        response = generator.client.models.generate_content(
-            model=generator.model_id,
-            contents=prompt
-        )
-        ai_response = response.text
-        
-        # 4. Save interactions to MongoDB
-        await db_manager.save_chat_message(req.student_id, "user", req.message)
-        await db_manager.save_chat_message(req.student_id, "assistant", ai_response)
-        
-        return {"response": ai_response}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        result = generator.chat(prompt)
+        ai_response = result["response"]
+        provider_used = result["provider"]
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+    # 5. Save interactions to MongoDB
+    await db_manager.save_chat_message(req.student_id, "user", req.message)
+    await db_manager.save_chat_message(req.student_id, "assistant", ai_response)
+    
+    return {"response": ai_response, "provider": provider_used}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

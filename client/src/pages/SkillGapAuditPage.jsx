@@ -42,6 +42,8 @@ export default function SkillGapAuditPage() {
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState([])
   const [isChatLoading, setIsChatLoading] = useState(false)
+  const [providerUsed, setProviderUsed] = useState('gemini') // 'gemini' | 'groq'
+  const [isGroqFallback, setIsGroqFallback] = useState(false)
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -82,6 +84,7 @@ export default function SkillGapAuditPage() {
 
   const handleSelectTarget = async (item) => {
     setLoading(true)
+    setIsGroqFallback(false) // reset on new request
     try {
       const studentId = JSON.parse(sessionStorage.getItem('pmCurrentUser') || '{}').email || 'guest'
       const payload = {
@@ -98,6 +101,17 @@ export default function SkillGapAuditPage() {
       if (resp.data.error) {
         toast.error(resp.data.error)
       } else {
+        // Detect if Groq fallback was used
+        const provider = resp.data._provider || 'gemini'
+        setProviderUsed(provider)
+        if (provider === 'groq') {
+          setIsGroqFallback(true)
+          toast.success('Analysis complete! Your personalized roadmap is ready.', {
+            id: 'analysis-success',
+            icon: '🎯',
+            style: { background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }
+          })
+        }
         setAnalysisResult(resp.data)
         setSelectedTarget(item)
         setEditableRoadmap(resp.data.roadmap_blocks || [])
@@ -299,8 +313,10 @@ export default function SkillGapAuditPage() {
                 <div className="flex items-center justify-between mb-10 gap-10">
                   <div className="space-y-4">
                     <h1 className="text-4xl font-extrabold text-slate-100">{selectedTarget}</h1>
-                    <div className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-tighter text-orange-400 border border-orange-500/20">
-                      Company analysis
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-tighter text-orange-400 border border-orange-500/20">
+                        Company analysis
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-3 flex-1 max-w-sm">

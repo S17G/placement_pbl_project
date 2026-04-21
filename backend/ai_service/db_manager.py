@@ -2,13 +2,16 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 from datetime import datetime
+from pathlib import Path
 
-load_dotenv()
+_env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(_env_path, override=True)
 
 class DBManager:
     def __init__(self):
-        self.uri = os.getenv("DEST_MONGO_URI")
-        self.db_name = os.getenv("DEST_DB_NAME", "placement_db")
+        # Prioritise standard MONGODB_URI, fallback to DEST_MONGO_URI
+        self.uri = os.getenv("MONGODB_URI") or os.getenv("DEST_MONGO_URI")
+        self.db_name = os.getenv("DEST_DB_NAME", os.getenv("SOURCE_DB_NAME", "placement_db"))
         self.client = None
         self.db = None
     async def connect(self):
