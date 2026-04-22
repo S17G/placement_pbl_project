@@ -30,18 +30,36 @@ function writeFallbackRecords(records) {
   fs.writeFileSync(fallbackFilePath, JSON.stringify(records, null, 2), 'utf8')
 }
 
-async function listInternshipRecords() {
-  try {
-    const records = await InternshipRecord.find().sort({ createdAt: -1 }).lean()
+function mergeUniqueRecords(...recordSets) {
+  const merged = []
+  const seen = new Set()
 
-    if (records.length > 0) {
-      return records
+  for (const records of recordSets) {
+    for (const record of records) {
+      const key = String(record._id || `${record.company || ''}|${record.role || ''}|${record.createdAt || ''}`)
+
+      if (!record.company || !record.role || seen.has(key)) {
+        continue
+      }
+
+      seen.add(key)
+      merged.push(record)
     }
-  } catch {
-    // Fall back to file storage when database read fails.
   }
 
-  return readFallbackRecords()
+  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+}
+
+async function listInternshipRecords() {
+  let databaseRecords = []
+
+  try {
+    databaseRecords = await InternshipRecord.find().sort({ createdAt: -1 }).lean()
+  } catch {
+    databaseRecords = []
+  }
+
+  return mergeUniqueRecords(databaseRecords, readFallbackRecords())
 }
 
 async function createInternshipRecord(payload) {
