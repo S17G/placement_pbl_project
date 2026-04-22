@@ -108,7 +108,7 @@ class SkillGapEngine:
 
     def get_extended_metadata(self):
         """Returns all deduplicated roles, companies, and detailed mapping relationships."""
-        if hasattr(self, 'cached_metadata') and self.cached_metadata:
+        if hasattr(self, 'cached_metadata') and self.cached_metadata is not None:
             return self.cached_metadata
 
         raw_roles = list(set(
@@ -196,7 +196,7 @@ class SkillGapEngine:
         return None
 
     def compare_skills(self, user_skills, target_skills_str):
-        if pd.isna(target_skills_str) or not target_skills_str:
+        if pd.isna(target_skills_str) if isinstance(target_skills_str, (str, float)) else False or target_skills_str is None:
             return {"match_p": 100, "matched": [], "missing": []}
             
         # Handle if target_skills_str is already a list
