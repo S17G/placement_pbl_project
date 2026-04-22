@@ -196,7 +196,7 @@ class SkillGapEngine:
         return None
 
     def compare_skills(self, user_skills, target_skills_str):
-        if pd.isna(target_skills_str) if isinstance(target_skills_str, (str, float)) else False or target_skills_str is None:
+        if target_skills_str is None or str(target_skills_str).strip() == "":
             return {"match_p": 100, "matched": [], "missing": []}
             
         # Handle if target_skills_str is already a list
@@ -208,4 +208,4 @@ class SkillGapEngine:
         user_skills_lower = [str(s).strip().lower() for s in user_skills]
         matched = [ts for ts in target_skills if any(us in ts or ts in us for us in user_skills_lower)]
         missing = [ts for ts in target_skills if ts not in matched]
-        return {"match_p": round((len(matched)/len(target_skills))*100, 2) if target_skills else 0, "matched": matched, "missing": missing}
+        return {"match_p": round((len(matched)/len(target_skills))*100, 2) if len(target_skills) > 0 else 0, "matched": matched, "missing": missing}
