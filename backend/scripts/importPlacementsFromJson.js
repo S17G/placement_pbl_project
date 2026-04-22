@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const { connectDatabase, disconnectDatabase } = require('../src/config/db')
 const env = require('../src/config/env')
 const PlacementRecord = require('../src/models/PlacementRecord')
+const InternshipRecord = require('../src/models/InternshipRecord')
 
 function parseLooseJson(raw) {
   try {
@@ -71,6 +72,51 @@ function normalizePlacementEntries(rawEntries) {
   const seen = new Set()
   return mapped.filter((row) => {
     const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
+    if (seen.has(key)) {
+      return false
+    }
+    seen.add(key)
+    return true
+  })
+}
+
+function normalizeInternshipEntries(rawEntries) {
+  if (!Array.isArray(rawEntries)) {
+    return []
+  }
+
+  const mapped = rawEntries
+    .filter((item) => item && (item.company || item.company_name))
+    .map((item) => {
+      const stipend = String(item.stipend || '').trim()
+      const hasStipend = stipend.length > 0 && stipend !== '-'
+
+      if (!hasStipend) {
+        return null
+      }
+
+      return {
+        company: String(item.company || item.company_name || '').trim(),
+        role: normalizeRole(item.skills_required || item.role || 'Internship Opportunity'),
+        package: stipend,
+        eligibility: String(item.cgpa_criteria || item.eligibility || '-').trim() || '-',
+        process: String(item.activity || item.process || '-').trim() || '-',
+        date: String(item.date || '-').trim() || '-',
+        cgpa_criteria: String(item.cgpa_criteria || item.eligibility || '-').trim() || '-',
+        ctc: String(item.ctc || '-').trim() || '-',
+        stipend,
+        activity: String(item.activity || item.process || '-').trim() || '-',
+        branch: String(item.branch || '-').trim() || '-',
+        venue: String(item.venue || '-').trim() || '-',
+        skills_required: String(item.skills_required || item.role || '-').trim() || '-',
+        createdAt: new Date(),
+      }
+    })
+    .filter((item) => item && item.company && item.role)
+
+  const seen = new Set()
+  return mapped.filter((row) => {
+    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${row.date.toLowerCase()}`
     if (seen.has(key)) {
       return false
     }
@@ -149,6 +195,69 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
   return { added, updated }
 }
 
+function mergeInternshipsIntoFallbackFile(fallbackFilePath, normalizedEntries) {
+  let existing = []
+
+  if (fs.existsSync(fallbackFilePath)) {
+    try {
+      const raw = fs.readFileSync(fallbackFilePath, 'utf8')
+      const parsed = JSON.parse(raw)
+      existing = Array.isArray(parsed) ? parsed : []
+    } catch {
+      existing = []
+    }
+  }
+
+  const indexByKey = new Map()
+  for (let idx = 0; idx < existing.length; idx += 1) {
+    const row = existing[idx]
+    const key = `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`
+    indexByKey.set(key, idx)
+  }
+
+  let added = 0
+  let updated = 0
+  for (const row of normalizedEntries) {
+    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
+    const existingIndex = indexByKey.get(key)
+
+    if (existingIndex !== undefined) {
+      existing[existingIndex] = {
+        ...existing[existingIndex],
+        ...row,
+        _id: existing[existingIndex]._id,
+        createdAt: existing[existingIndex].createdAt || row.createdAt.toISOString(),
+      }
+      updated += 1
+      continue
+    }
+
+    indexByKey.set(key, existing.length)
+    existing.unshift({
+      _id: new mongoose.Types.ObjectId().toString(),
+      company: row.company,
+      role: row.role,
+      package: row.package,
+      eligibility: row.eligibility,
+      process: row.process,
+      date: row.date,
+      cgpa_criteria: row.cgpa_criteria,
+      ctc: row.ctc,
+      stipend: row.stipend,
+      activity: row.activity,
+      branch: row.branch,
+      venue: row.venue,
+      skills_required: row.skills_required,
+      createdAt: row.createdAt.toISOString(),
+    })
+    added += 1
+  }
+
+  fs.mkdirSync(path.dirname(fallbackFilePath), { recursive: true })
+  fs.writeFileSync(fallbackFilePath, JSON.stringify(existing, null, 2), 'utf8')
+  return { added, updated }
+}
+
 async function mergeIntoMongo(normalizedEntries) {
   await connectDatabase(env.mongodbUri, { enableInMemoryMongo: env.enableInMemoryMongo })
 
@@ -200,6 +309,50 @@ async function mergeIntoMongo(normalizedEntries) {
   }
 }
 
+async function mergeInternshipsIntoMongo(normalizedEntries) {
+  await connectDatabase(env.mongodbUri, { enableInMemoryMongo: env.enableInMemoryMongo })
+
+  const operations = normalizedEntries.map((row) => ({
+    updateOne: {
+      filter: {
+        company: row.company,
+        role: row.role,
+        date: row.date,
+      },
+      update: {
+        $set: {
+          package: row.package,
+          eligibility: row.eligibility,
+          process: row.process,
+          cgpa_criteria: row.cgpa_criteria,
+          ctc: row.ctc,
+          stipend: row.stipend,
+          activity: row.activity,
+          branch: row.branch,
+          venue: row.venue,
+          skills_required: row.skills_required,
+        },
+        $setOnInsert: {
+          company: row.company,
+          role: row.role,
+          date: row.date,
+        },
+      },
+      upsert: true,
+    },
+  }))
+
+  const bulkResult = operations.length > 0
+    ? await InternshipRecord.bulkWrite(operations, { ordered: false })
+    : { upsertedCount: 0, modifiedCount: 0 }
+
+  await disconnectDatabase()
+  return {
+    upserted: bulkResult.upsertedCount || 0,
+    modified: bulkResult.modifiedCount || 0,
+  }
+}
+
 async function main() {
   const sourcePath = process.argv[2]
 
@@ -214,17 +367,29 @@ async function main() {
   const raw = fs.readFileSync(sourcePath, 'utf8')
   const parsed = parseLooseJson(raw)
   const normalizedEntries = normalizePlacementEntries(parsed)
+  const normalizedInternships = normalizeInternshipEntries(parsed)
 
   const fallbackFilePath = path.resolve(__dirname, '..', 'uploads', 'placements.json')
+  const internshipFallbackFilePath = path.resolve(__dirname, '..', 'uploads', 'internships.json')
   const fallbackResult = mergeIntoFallbackFile(fallbackFilePath, normalizedEntries)
   const mongoResult = await mergeIntoMongo(normalizedEntries)
+  const internshipFallbackResult = mergeInternshipsIntoFallbackFile(
+    internshipFallbackFilePath,
+    normalizedInternships,
+  )
+  const internshipMongoResult = await mergeInternshipsIntoMongo(normalizedInternships)
 
   console.log(`Source entries: ${Array.isArray(parsed) ? parsed.length : 0}`)
   console.log(`Normalized unique company-role entries: ${normalizedEntries.length}`)
+  console.log(`Normalized stipend internship entries: ${normalizedInternships.length}`)
   console.log(`Fallback placements added: ${fallbackResult.added}`)
   console.log(`Fallback placements updated: ${fallbackResult.updated}`)
   console.log(`Mongo placements upserted: ${mongoResult.upserted}`)
   console.log(`Mongo placements modified: ${mongoResult.modified}`)
+  console.log(`Fallback internships added: ${internshipFallbackResult.added}`)
+  console.log(`Fallback internships updated: ${internshipFallbackResult.updated}`)
+  console.log(`Mongo internships upserted: ${internshipMongoResult.upserted}`)
+  console.log(`Mongo internships modified: ${internshipMongoResult.modified}`)
 }
 
 main().catch((error) => {
