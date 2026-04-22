@@ -100,8 +100,8 @@ INSTRUCTION:
     def _call_nvidia(self, prompt: str) -> dict:
         if not self.nvidia_client: raise RuntimeError("NVIDIA Not Configured")
         
-        # Trying the most common Llama model on NIM if Mistral fails
-        models = ["meta/llama-3.1-70b-instruct", "mistralai/mistral-large-2407"]
+        # Using the specific Mistral model requested by the user
+        models = ["mistralai/mistral-small-4-119b-2603"]
         last_err = None
         for model in models:
             try:
