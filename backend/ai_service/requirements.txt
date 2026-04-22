@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+motor
+pandas
+pydantic
+python-dotenv
+google-genai
+groq
+openai
+pymongo

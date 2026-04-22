@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+.git
+.vscode
+*.csv
+*.txt
+!requirements.txt
+!official_company_data_sorted.csv
+!placement_dataset_KAGGLE.csv

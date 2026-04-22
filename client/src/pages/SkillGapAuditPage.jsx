@@ -21,7 +21,7 @@ import {
 import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast'
 
-const AI_BASE_URL = 'http://localhost:8000/api/v1'
+const AI_BASE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000/api/v1'
 
 export default function SkillGapAuditPage() {
   // --- STATE ---
