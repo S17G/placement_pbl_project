@@ -49,6 +49,6 @@ class AnalysisResponse(BaseModel):
     estimated_preparation_days: int
     analysis_summary: str
     readiness_status: str
-    skills_already_have: List[str]
+    skills_already_have: List[Dict]
     skills_to_develop: List[Dict]
     roadmap_blocks: List[Dict]
