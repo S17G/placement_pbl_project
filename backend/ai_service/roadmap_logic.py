@@ -88,7 +88,7 @@ INPUT:
 - Role: {target_role} | CTC: {target_ctc_bracket}
 - Current Skills: {", ".join(user_skills)}
 - Missing: {", ".join(analysis['missing'])}
-- Verified Database Resources: {context['resources'] if context['resources'] else 'NONE FOUND IN DB'}
+- Verified Database Resources: {context['resources'] if len(str(context['resources'])) > 5 else 'NONE FOUND IN DB'}
 - Real Questions: {context['questions']}
 
 INSTRUCTION:
@@ -161,6 +161,10 @@ INSTRUCTION:
                 if not company_list: return {"error": "No companies found for this criteria."}
                 target_jd_skills = company_list[0]['skills_required']
                 target_company = company_list[0]['company_name']
+
+            # DEBUG: Check types to catch ambiguous Pandas objects
+            print(f">> DEBUG: target_company type: {type(target_company)}")
+            print(f">> DEBUG: target_jd_skills type: {type(target_jd_skills)}")
 
             analysis = self.engine.compare_skills(user_skills, target_jd_skills)
             context = self.get_context_for_role(target_role)
