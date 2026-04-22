@@ -42,7 +42,7 @@ class RoadmapGenerator:
         self.groq_client = None
         if GROQ_AVAILABLE and self.groq_api_key:
             self.groq_client = Groq(api_key=self.groq_api_key)
-        self.groq_model_id = "llama-3.3-70b-versatile"
+        self.groq_model_id = "mixtral-8x7b-32768"
 
         # --- Gemini setup (Fallback 2) ---
         self.gemini_api_key = api_key or os.getenv("GEMINI_API_KEY")
