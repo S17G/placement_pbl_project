@@ -205,7 +205,12 @@ INSTRUCTION:
         except Exception as e:
             import traceback
             error_trace = traceback.format_exc()
-            print(f"[ENGINE] CRASH: {str(e)}\n{error_trace}")
+            print("\n" + "="*50)
+            print("🚨 CRITICAL ENGINE CRASH 🚨")
+            print(f"Error: {str(e)}")
+            print("-" * 50)
+            print(error_trace)
+            print("="*50 + "\n")
             return {"error": f"Internal Engine Error: {str(e)}", "trace": error_trace}
 
 if __name__ == "__main__":
