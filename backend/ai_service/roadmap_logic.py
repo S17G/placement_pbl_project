@@ -42,7 +42,7 @@ class RoadmapGenerator:
         self.groq_client = None
         if GROQ_AVAILABLE and self.groq_api_key:
             self.groq_client = Groq(api_key=self.groq_api_key)
-        self.groq_model_id = "mixtral-8x7b-32768"
+        self.groq_model_id = "gemma2-9b-it"
 
         # --- Gemini setup (Fallback 2) ---
         self.gemini_api_key = api_key or os.getenv("GEMINI_API_KEY")
@@ -110,6 +110,17 @@ INSTRUCTION:
 3. Return ONLY a valid JSON object with: company_name, match_percentage, matched_count, missing_count, priority_skill, estimated_preparation_days, analysis_summary, readiness_status, skills_already_have, skills_to_develop, roadmap_blocks.
 """
 
+    def _parse_json(self, content: str) -> dict:
+        """Safely parse JSON, stripping markdown code blocks if present."""
+        text = content.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return json.loads(text.strip())
+
     def _call_nvidia(self, prompt: str) -> dict:
         if not self.nvidia_client: raise RuntimeError("NVIDIA Not Configured")
         
@@ -125,7 +136,7 @@ INSTRUCTION:
                     temperature=0.1,
                     response_format={"type": "json_object"},
                 )
-                return json.loads(completion.choices[0].message.content)
+                return self._parse_json(completion.choices[0].message.content)
             except Exception as e:
                 last_err = e
                 print(f"  [NVIDIA] Model {model} failed: {str(e)}")
@@ -140,7 +151,7 @@ INSTRUCTION:
             temperature=0.1,
             response_format={"type": "json_object"},
         )
-        return json.loads(completion.choices[0].message.content)
+        return self._parse_json(completion.choices[0].message.content)
 
     def _call_gemini(self, prompt: str) -> dict:
         if not self.gemini_client: raise RuntimeError("Gemini Not Configured")
