@@ -88,22 +88,13 @@ INPUT:
 - Role: {target_role} | CTC: {target_ctc_bracket}
 - Current Skills: {", ".join(user_skills)}
 - Missing: {", ".join(analysis['missing'])}
+- Verified Database Resources: {context['resources'] if context['resources'] else 'NONE FOUND IN DB'}
 - Real Questions: {context['questions']}
 
-OUTPUT ONLY VALID JSON:
-{{
-  "company_name": "{target_company_display}",
-  "match_percentage": {analysis['match_p']},
-  "matched_count": {len(analysis['matched'])},
-  "missing_count": {len(analysis['missing'])},
-  "priority_skill": "Skill",
-  "estimated_preparation_days": 30,
-  "analysis_summary": "Summary text.",
-  "readiness_status": "Status",
-  "skills_already_have": ["Skill"],
-  "skills_to_develop": [{{"skill": "S", "tag": "Critical", "est_days": 7, "tasks": ["T"]}}],
-  "roadmap_blocks": [{{"title": "P", "tasks": ["T"], "resources": ["L"]}}]
-}}
+INSTRUCTION:
+1. Use "Verified Database Resources" if provided. 
+2. If "NONE FOUND IN DB", you MUST generate your own curated list of high-quality learning resources (YouTube, docs) for the missing skills.
+3. Return ONLY a valid JSON object with: company_name, match_percentage, matched_count, missing_count, priority_skill, estimated_preparation_days, analysis_summary, readiness_status, skills_already_have, skills_to_develop, roadmap_blocks.
 """
 
     def _call_nvidia(self, prompt: str) -> dict:
