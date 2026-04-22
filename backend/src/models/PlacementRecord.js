@@ -13,6 +13,12 @@ const placementRecordSchema = new mongoose.Schema(
     profile_pic: { type: String, default: '', trim: true },
     uid: { type: String, default: '', trim: true },
     content_markdown: { type: String, default: '', trim: true },
+    ctc: { type: String, default: '-', trim: true },
+    cgpa_criteria: { type: String, default: '-', trim: true },
+    stipend: { type: String, default: '-', trim: true },
+    activity: { type: String, default: '-', trim: true },
+    venue: { type: String, default: '-', trim: true },
+    skills_required: { type: String, default: '-', trim: true },
   },
   { timestamps: true },
 )

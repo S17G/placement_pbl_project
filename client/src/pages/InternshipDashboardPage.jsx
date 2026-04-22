@@ -50,34 +50,42 @@ function InternshipDashboardPage() {
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-300">
             <tr>
-              <th className="px-4 py-3 font-semibold">Company</th>
-              <th className="px-4 py-3 font-semibold">Role</th>
-              <th className="px-4 py-3 font-semibold">Package</th>
-              <th className="px-4 py-3 font-semibold">Eligibility</th>
-              <th className="px-4 py-3 font-semibold">Process</th>
+              <th className="px-4 py-3 font-semibold">Company Name</th>
+              <th className="px-4 py-3 font-semibold">Date</th>
+              <th className="px-4 py-3 font-semibold">CGPA Criteria</th>
+              <th className="px-4 py-3 font-semibold">CTC</th>
+              <th className="px-4 py-3 font-semibold">Stipend</th>
+              <th className="px-4 py-3 font-semibold">Activity</th>
+              <th className="px-4 py-3 font-semibold">Branch</th>
+              <th className="px-4 py-3 font-semibold">Venue</th>
+              <th className="px-4 py-3 font-semibold">Skills Required</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr className="border-t border-slate-700">
-                <td className="px-4 py-3 text-slate-400" colSpan={5}>
+                <td className="px-4 py-3 text-slate-400" colSpan={9}>
                   Loading internship records...
                 </td>
               </tr>
             ) : internshipRecords.length === 0 ? (
               <tr className="border-t border-slate-700">
-                <td className="px-4 py-3 text-slate-400" colSpan={5}>
+                <td className="px-4 py-3 text-slate-400" colSpan={9}>
                   No internship records available.
                 </td>
               </tr>
             ) : (
               internshipRecords.map((record) => (
                 <tr key={record._id || record.id} className="border-t border-slate-700 text-slate-200">
-                  <td className="px-4 py-3">{record.company}</td>
-                  <td className="px-4 py-3">{record.role}</td>
-                  <td className="px-4 py-3">{record.package}</td>
-                  <td className="px-4 py-3">{record.eligibility}</td>
-                  <td className="px-4 py-3">{record.process}</td>
+                  <td className="px-4 py-3">{record.company_name || record.company || '-'}</td>
+                  <td className="px-4 py-3">{record.date || (record.createdAt ? new Date(record.createdAt).toLocaleDateString() : '-')}</td>
+                  <td className="px-4 py-3">{record.cgpa_criteria || record.eligibility || '-'}</td>
+                  <td className="px-4 py-3">{record.ctc || '-'}</td>
+                  <td className="px-4 py-3">{record.stipend || record.package || '-'}</td>
+                  <td className="px-4 py-3">{record.activity || record.process || '-'}</td>
+                  <td className="px-4 py-3">{record.branch || '-'}</td>
+                  <td className="px-4 py-3">{record.venue || '-'}</td>
+                  <td className="px-4 py-3">{record.skills_required || record.role || '-'}</td>
                 </tr>
               ))
             )}

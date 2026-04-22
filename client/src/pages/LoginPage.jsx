@@ -132,16 +132,6 @@ function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-orange-300/18 bg-orange-500/5 p-4">
-            <p className="text-sm text-slate-300">New to the platform?</p>
-            <Link
-              to="/register"
-              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-orange-300/40 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-100 transition hover:border-orange-200 hover:bg-orange-300/20"
-            >
-              Register now
-            </Link>
-          </div>
-
           <h2 className="mt-6 text-2xl font-bold text-white">
             {activeTab === 'admin' ? 'Admin Login' : 'Student Login'}
           </h2>
