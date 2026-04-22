@@ -35,7 +35,7 @@ class RoadmapGenerator:
                 base_url="https://integrate.api.nvidia.com/v1",
                 api_key=self.nvidia_api_key
             )
-        self.nvidia_model_id = "mistralai/mistral-large-2-12407" 
+        self.nvidia_model_id = "mistralai/mistral-small-4-119b-2603"
 
         # --- Groq setup (Fallback 1) ---
         self.groq_api_key = os.getenv("GROQ_API_KEY")
@@ -53,6 +53,18 @@ class RoadmapGenerator:
 
         self.engine = engine or SkillGapEngine()
 
+    def _safe_notna(self, val):
+        """Safely check if a value is not NA, handling numpy arrays."""
+        try:
+            if val is None:
+                return False
+            import numpy as np
+            if isinstance(val, np.ndarray):
+                return val.size > 0
+            return bool(pd.notna(val))
+        except (ValueError, TypeError):
+            return val is not None
+
     def get_context_for_role(self, role_filter):
         """Extract real interview questions and resources for the selected role."""
         if self.engine.kaggle_df.empty:
@@ -62,11 +74,12 @@ class RoadmapGenerator:
         questions = []
         resources = []
         for _, row in kag_data.iterrows():
-            if pd.notna(row.get('questions_all')):
-                questions.append(f"Q: {row['questions_all']}")
+            q_val = row.get('questions_all')
+            if self._safe_notna(q_val):
+                questions.append(f"Q: {q_val}")
             
             res = row.get('resource_links', row.get('resource links'))
-            if pd.notna(res):
+            if self._safe_notna(res):
                 if isinstance(res, list):
                     resources.extend([str(r).strip() for r in res if r])
                 else:
