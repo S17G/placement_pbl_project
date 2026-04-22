@@ -3,8 +3,6 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
-import pandas as pd
-from contextlib import asynccontextmanager
 
 from skill_gap_engine import SkillGapEngine
 from roadmap_logic import RoadmapGenerator
@@ -12,49 +10,18 @@ from api_schemas import (
     SkillDiscoveryRequest, 
     SkillRecommendationResponse, 
     CompanyListItem, 
-    QuickMatchRequest,
-    QuickMatchResponse,
     RoadmapRequest,
     AnalysisResponse,
     ChatRequest
 )
 from db_manager import db_manager
 
-# --- LIFESPAN HANDLER (Modern FastAPI) ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # STARTUP: Initializing engines and loading data
-    print("\n" + "="*50)
-    print(">> AI SERVICE STARTUP INITIATED")
-    print("="*50)
-    
-    await db_manager.connect()
-    
-    print("Fetching placement data from MongoDB Atlas...")
-    try:
-        official_data = await db_manager.fetch_collection_data("companies_official")
-        kaggle_data = await db_manager.fetch_collection_data("companies_kaggle")
-        
-        if isinstance(official_data, list) and isinstance(kaggle_data, list) and len(official_data) > 0:
-            engine.update_data(pd.DataFrame(official_data), pd.DataFrame(kaggle_data))
-            print(f"[OK] ENGINE READY: {len(official_data)} official and {len(kaggle_data)} kaggle records loaded.")
-        else:
-            print("[WARN] WARNING: MongoDB collections appear to be empty. Run migration script first.")
-    except Exception as e:
-        print(f"[ERROR] DATA LOAD FAILED: {str(e)}")
-    
-    print("="*50 + "\n")
-    yield
-    # SHUTDOWN
-    print("\n[DONE] AI SERVICE SHUTDOWN COMPLETE")
-
-# Create App
-app = FastAPI(title="Placemate Skill Gap API", lifespan=lifespan)
+app = FastAPI(title="Placemate Skill Gap API")
 
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # Adjust for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,26 +29,47 @@ app.add_middleware(
 
 # Initialize engines
 engine = SkillGapEngine()
-# Pass the shared engine so RoadmapGenerator uses MongoDB-loaded data (not a new empty one)
+# Note: RoadmapGenerator requires GEMINI_API_KEY env var
 generator = RoadmapGenerator(engine=engine)
 
-# --- ENDPOINTS ---
+import pandas as pd
 
-@app.get("/api/v1/health")
-async def health_check():
-    """Simple health check for frontend connectivity."""
-    return {
-        "status": "healthy",
-        "engine_ready": not engine.official_df.empty,
-        "records_count": len(engine.official_df) + len(engine.kaggle_df)
-    }
+async def sync_engine_with_db():
+    """Pulls normalized data from MongoDB and updates the engine."""
+    print(">> Syncing engine with cloud database...")
+    official_data = await db_manager.fetch_collection_data('companies_official')
+    kaggle_data = await db_manager.fetch_collection_data('companies_kaggle')
+    exp_processed_data = await db_manager.fetch_collection_data('experience_processed')
+    
+    # Merge and update the engine
+    all_kaggle = kaggle_data + exp_processed_data
+    engine.update_data(pd.DataFrame(official_data), pd.DataFrame(all_kaggle))
+    print(f">> Sync complete: {len(official_data)} official and {len(all_kaggle)} kaggle/processed companies loaded.")
+
+@app.on_event("startup")
+async def startup_db():
+    await db_manager.connect()
+    await sync_engine_with_db()
+    print(">> Engine data synchronized with Cloud DB.")
 
 @app.get("/api/v1/metadata")
 async def get_metadata():
-    """Returns all unique roles, companies, and CTC brackets across both datasets."""
-    if engine.official_df.empty:
-        raise HTTPException(status_code=503, detail="AI Engine is still loading placement data from MongoDB. Please wait 5 seconds and refresh.")
+    """Returns available roles, companies, and CTC brackets for UI filters."""
+    # Use the more comprehensive metadata method from the engine
     return engine.get_extended_metadata()
+
+@app.post("/api/v1/quick-match")
+async def quick_match(
+    company_name: str = Body(..., embed=True),
+    user_skills: List[str] = Body(..., embed=True)
+):
+    """Instant skill comparison for UI feedback."""
+    comp_data = engine.get_company_by_name(company_name)
+    if not comp_data:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    analysis = engine.compare_skills(user_skills, comp_data.get('skills_required', ''))
+    return analysis
 
 @app.post("/api/v1/recommend-skills", response_model=SkillRecommendationResponse)
 async def recommend_skills(req: SkillDiscoveryRequest):
@@ -113,16 +101,6 @@ async def list_companies(
     results.sort(key=lambda x: x['match_p'], reverse=True)
     return results
 
-@app.post("/api/v1/quick-match", response_model=QuickMatchResponse)
-async def quick_match(req: QuickMatchRequest):
-    """Provides an instant skill match against a specific company without hitting LLM."""
-    comp_data = engine.get_company_by_name(req.company_name)
-    if not comp_data:
-        raise HTTPException(status_code=404, detail=f"Company '{req.company_name}' not found.")
-    
-    analysis = engine.compare_skills(req.user_skills, comp_data.get('skills_required', ''))
-    return analysis
-
 @app.post("/api/v1/generate-roadmap", response_model=AnalysisResponse)
 async def generate_roadmap(req: RoadmapRequest):
     """Generates a deep, RAG-based roadmap and saves to MongoDB."""
@@ -135,12 +113,7 @@ async def generate_roadmap(req: RoadmapRequest):
     )
 
     if "error" in result:
-        print(f"[ERROR] Roadmap Generation Failed: {result['error']}")
         raise HTTPException(status_code=500, detail=result['error'])
-
-    # Log which provider was used
-    provider = result.get("_provider", "gemini")
-    print(f"[LLM] Roadmap served by: {provider.upper()}")
 
     # Save to MongoDB roadmaps collection
     roadmap_id = await db_manager.save_session(req.student_id, result, "roadmaps")
@@ -166,7 +139,7 @@ async def chat_with_assistant(req: ChatRequest):
     latest_roadmap = await db_manager.get_latest_roadmap(req.student_id)
     roadmap_context = f"Student's Current Roadmap: {latest_roadmap['analysis_summary']}" if latest_roadmap else ""
 
-    # 3. Build prompt
+    # 3. Prompt Gemini
     prompt = f"""
     You are a career assistant for the Placemate platform. 
     You recognize the student across sessions.
@@ -182,19 +155,21 @@ async def chat_with_assistant(req: ChatRequest):
     Respond in a personalized, helpful way based on their history. If they ask for changes, tell them you'll update the plan.
     """
 
-    # 4. Use shared chat logic for the core response
     try:
-        result = generator.chat(prompt)
-        ai_response = result["response"]
-        provider_used = result["provider"]
-    except Exception as err:
-        raise HTTPException(status_code=500, detail=str(err))
-
-    # 5. Save interactions to MongoDB
-    await db_manager.save_chat_message(req.student_id, "user", req.message)
-    await db_manager.save_chat_message(req.student_id, "assistant", ai_response)
-    
-    return {"response": ai_response, "provider": provider_used}
+        # We can use the generator's gemini_client for chat
+        response = generator.gemini_client.models.generate_content(
+            model=generator.gemini_model_id,
+            contents=prompt
+        )
+        ai_response = response.text
+        
+        # 4. Save interactions to MongoDB
+        await db_manager.save_chat_message(req.student_id, "user", req.message)
+        await db_manager.save_chat_message(req.student_id, "assistant", ai_response)
+        
+        return {"response": ai_response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

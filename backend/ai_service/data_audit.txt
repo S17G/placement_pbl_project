@@ -1,0 +1,142 @@
+--- OFFICIAL COMPANIES ---
+ACI Worldwide
+AT20.ai
+Accordion D&A
+Amdocs
+Arista Network
+Arista Networks
+Aspect Ratio
+Authmind
+Avaya
+Ayaan Automation System and Symtronics
+Bank of New York
+Barclays
+Cell.do
+Cencora
+CertifyOS
+Commvault System
+Concentric AI
+Dataeaze
+Dell Technologies for the summer internship
+Druva
+Emcure
+Enlyft
+Equifax.
+Flextrade
+FloQast
+Fractal
+GEP
+HABER
+HARMAN
+Hashdin
+Honeywell
+IBM
+IDeaS
+ION Group
+ION.
+Iaura
+Invimatic Technologies
+Ittiam Systems
+JTP
+Johnson Controls
+Kylas, Beyond walls.
+MSCI
+Merilytics
+Modulr
+NCS Technologies
+NVIDIA
+Nice System
+One Card
+Pattern Technologies
+PhonePe
+Promobi Technologies
+Qualys.
+Quorum
+Rahi Technologies
+Rockwell Automation
+SAP
+Sedemac
+Sell.do
+Siemens
+SigLens
+TATA Technologies
+TIAA
+Toshiba
+UPTIQ
+Voicera
+Western Union
+Wissen Technology
+Yardi
+ZS Associate
+ZS Associates
+Zendesk
+eQ Technogic
+eQ Technologic
+
+--- KAGGLE COMPANIES ---
+ACA Global
+ACI Worldwide
+Amazon
+Arista Networks
+Atlan
+Avaya
+BNY Mellon
+Bank of New York
+Bank of New York Mellon
+Barclays
+Bloomberg
+Credit Suisse
+Dell
+Deutsche Bank
+Druva
+EQ Technologic
+Floqast
+Ion
+Mastercard
+Microsoft
+NXP Semiconductors
+Nice Systems
+PhonePe
+Siemens
+Tracelink
+UPTIQ
+Walmart Global Tech India
+ZS Associates
+Zensar
+nan
+
+--- OFFICIAL ROLES ---
+
+
+--- KAGGLE ROLES ---
+AI/Software Engineer Intern (PPO → AI/Software Engineer)
+Associate Software Engineer
+Business Technology Solutions Associate
+Full Time
+Graduate Analyst
+Intern
+Internship
+Management Role (Risk Strategy Department)
+SDE
+SDE Intern
+SDE Intern – Mastercard Checkout Services
+SDE Role
+SDE [Intern + FTE]
+SDE-I Intern
+SDE1
+SWE
+Software Development Engineer
+Software Development Engineer (SDE)
+Software Engineer
+Software Engineer Intern - I
+Software Engineering
+Software Engineering (SWE) Internship
+Software Engineering Internship
+Software Intern (Summer Internship)
+Summer Intern
+Summer Internship
+Summer Internship (SDE Intern)
+Technology Intern
+Technology Summer Intern
+VLSI Engineer
+nan
