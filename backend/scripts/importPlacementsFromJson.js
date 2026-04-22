@@ -5,27 +5,66 @@ const { connectDatabase, disconnectDatabase } = require('../src/config/db')
 const env = require('../src/config/env')
 const PlacementRecord = require('../src/models/PlacementRecord')
 
+function parseLooseJson(raw) {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    // Accept non-standard NaN tokens present in some exported datasets.
+    const sanitized = raw.replace(/\bNaN\b/g, 'null')
+    return JSON.parse(sanitized)
+  }
+}
+
+function normalizeRole(value) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim()
+  if (!text || text === '-') {
+    return 'Placement Opportunity'
+  }
+
+  const first = text
+    .split(/,|\||\//)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)[0]
+
+  return first || 'Placement Opportunity'
+}
+
+function deriveBatch(value) {
+  const text = String(value || '')
+  const yearMatch = text.match(/(20\d{2})/)
+  return yearMatch ? yearMatch[1] : '2025'
+}
+
 function normalizePlacementEntries(rawEntries) {
   if (!Array.isArray(rawEntries)) {
     return []
   }
 
   const mapped = rawEntries
-    .filter((item) => item && item.company && item.role)
+    .filter((item) => item && (item.company || item.company_name))
     .map((item) => ({
-      company: String(item.company || '').trim(),
-      role: String(item.role || '').trim(),
-      package: 'N/A',
-      eligibility: `${String(item.branch || '').trim() || 'All Branches'} ${String(item.batch || '').trim() || ''}`.trim(),
-      process: 'Imported from student placement dataset',
-      createdAt: item.date ? new Date(item.date) : new Date(),
+      name: String(item.name || 'Placement Cell').trim(),
+      company: String(item.company || item.company_name || '').trim(),
+      role: normalizeRole(item.role || item.skills_required),
+      branch: String(item.branch || 'All Branches').trim() || 'All Branches',
+      batch: String(item.batch || deriveBatch(item.date)).trim() || '2025',
+      date: String(item.date || '').trim() || new Date().toISOString().slice(0, 10),
+      email: String(item.email || 'na@placemate.local').trim() || 'na@placemate.local',
+      views: Number(item.views || 0),
+      profile_pic: String(item.profile_pic || '').trim(),
+      uid: String(item.uid || '').trim(),
+      content_markdown: String(item.content_markdown || '').trim(),
+      package: String(item.package || item.ctc || 'N/A').trim() || 'N/A',
+      eligibility: String(item.eligibility || item.cgpa_criteria || '-').trim() || '-',
+      process: String(item.process || item.activity || '-').trim() || '-',
+      createdAt: new Date(),
     }))
     .filter((item) => item.company && item.role)
 
-  // Keep one record per unique company + role for placement table readability.
+  // Keep one record per unique company + role + date.
   const seen = new Set()
   return mapped.filter((row) => {
-    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}`
+    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
     if (seen.has(key)) {
       return false
     }
@@ -48,12 +87,15 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
   }
 
   const existingKeys = new Set(
-    existing.map((row) => `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}`),
+    existing.map(
+      (row) =>
+        `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`,
+    ),
   )
 
   let added = 0
   for (const row of normalizedEntries) {
-    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}`
+    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
     if (existingKeys.has(key)) {
       continue
     }
@@ -61,8 +103,17 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
     existingKeys.add(key)
     existing.unshift({
       _id: new mongoose.Types.ObjectId().toString(),
+      name: row.name,
       company: row.company,
       role: row.role,
+      branch: row.branch,
+      batch: row.batch,
+      date: row.date,
+      email: row.email,
+      views: row.views,
+      profile_pic: row.profile_pic,
+      uid: row.uid,
+      content_markdown: row.content_markdown,
       package: row.package,
       eligibility: row.eligibility,
       process: row.process,
@@ -79,13 +130,16 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
 async function mergeIntoMongo(normalizedEntries) {
   await connectDatabase(env.mongodbUri, { enableInMemoryMongo: env.enableInMemoryMongo })
 
-  const existing = await PlacementRecord.find({}, 'company role').lean()
+  const existing = await PlacementRecord.find({}, 'company role date').lean()
   const existingKeys = new Set(
-    existing.map((row) => `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}`),
+    existing.map(
+      (row) =>
+        `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`,
+    ),
   )
 
   const toInsert = normalizedEntries.filter((row) => {
-    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}`
+    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
     if (existingKeys.has(key)) {
       return false
     }
@@ -114,7 +168,7 @@ async function main() {
   }
 
   const raw = fs.readFileSync(sourcePath, 'utf8')
-  const parsed = JSON.parse(raw)
+  const parsed = parseLooseJson(raw)
   const normalizedEntries = normalizePlacementEntries(parsed)
 
   const fallbackFilePath = path.resolve(__dirname, '..', 'uploads', 'placements.json')
