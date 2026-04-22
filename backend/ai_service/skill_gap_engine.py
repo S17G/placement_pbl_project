@@ -73,13 +73,44 @@ class SkillGapEngine:
                 if abbr.upper() in r_str and len(r_str) > len(abbr) + 2:
                     return r_str # Keep the existing descriptive full name
                     
-            return r_str
+            # 3. Capitalize the role to prevent 'software engineer' vs 'Software Engineer' duplicates
+            return r_str.title()
 
+        def clean_company_name(name):
+            if pd.isna(name): return name
+            name = str(name).strip().title()
+            # Common deduplications
+            name = re.sub(r'(?i)\s+India\s*$', '', name) # e.g. "Amazon India" -> "Amazon"
+            name = re.sub(r'(?i)\s+(Pvt\s*Ltd|Private\s*Limited|Inc|Corp|LLC)\.?$', '', name)
+            return name.strip()
+
+        # Apply company name cleaning
+        if 'company_name' in self.official_df.columns:
+            self.official_df['company_name'] = self.official_df['company_name'].apply(clean_company_name)
+        if 'company_name' in self.kaggle_df.columns:
+            self.kaggle_df['company_name'] = self.kaggle_df['company_name'].apply(clean_company_name)
+
+        # Apply role grouping
         self.official_df['grouped_role'] = self.official_df['profile'].apply(get_canonical_role) if 'profile' in self.official_df.columns else self.official_df['company_name'].apply(lambda x: 'Software Development Engineer')
         self.kaggle_df['grouped_role'] = self.kaggle_df['role'].apply(get_canonical_role) if 'role' in self.kaggle_df.columns else self.kaggle_df['company_name'].apply(lambda x: 'Software Development Engineer')
 
+        # Filter out generic or unwanted roles (like 'intern')
+        unwanted_keywords = ['intern', 'internship', 'trainee']
+        def is_wanted_role(role):
+            r_lower = str(role).lower()
+            # If the role is literally just "intern", exclude it
+            if r_lower in unwanted_keywords:
+                return False
+            # Or if it contains 'intern'
+            if any(k in r_lower for k in unwanted_keywords):
+                return False
+            return True
+
+        self.official_df = self.official_df[self.official_df['grouped_role'].apply(is_wanted_role)]
+        self.kaggle_df = self.kaggle_df[self.kaggle_df['grouped_role'].apply(is_wanted_role)]
+
     def get_extended_metadata(self):
-        """Returns all deduplicated roles and all unique company names from both datasets."""
+        """Returns all deduplicated roles, companies, and detailed mapping relationships."""
         raw_roles = list(set(
             self.official_df['grouped_role'].dropna().astype(str).tolist() + 
             self.kaggle_df['grouped_role'].dropna().astype(str).tolist()
@@ -92,10 +123,32 @@ class SkillGapEngine:
         ))
         all_companies = sorted([c for c in raw_companies if c.strip() and c.lower() != 'nan'])
         
+        mappings = []
+        
+        if not self.official_df.empty:
+            for _, row in self.official_df.iterrows():
+                comp = str(row.get('company_name', '')).strip()
+                role = str(row.get('grouped_role', '')).strip()
+                ctc_b = str(row.get('ctc_bracket', '')).strip()
+                if comp and comp.lower() != 'nan':
+                    mappings.append({"company": comp, "role": role, "ctc_bracket": ctc_b})
+        
+        if not self.kaggle_df.empty:
+            for _, row in self.kaggle_df.iterrows():
+                comp = str(row.get('company_name', '')).strip()
+                role = str(row.get('grouped_role', '')).strip()
+                ctc_b = str(row.get('ctc_bracket', 'Unknown')).strip()
+                if comp and comp.lower() != 'nan':
+                    mappings.append({"company": comp, "role": role, "ctc_bracket": ctc_b})
+
+        # Deduplicate mappings
+        unique_mappings = [dict(t) for t in {tuple(d.items()) for d in mappings}]
+        
         return {
             "roles": all_roles,
             "companies": all_companies,
-            "ctc_brackets": ["0-5LPA", "5-10LPA", "10-15LPA", "15-20LPA", "20>(dream)"]
+            "ctc_brackets": ["0-5LPA", "5-10LPA", "10-15LPA", "15-20LPA", "20>(dream)"],
+            "mappings": unique_mappings
         }
 
     def get_recommended_skills(self, role_filter, ctc_bracket):

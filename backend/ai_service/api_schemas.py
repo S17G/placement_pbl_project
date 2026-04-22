@@ -15,6 +15,16 @@ class CompanyListItem(BaseModel):
     ctc_bracket: str
     match_p: float
 
+class QuickMatchRequest(BaseModel):
+    company_name: str
+    user_skills: List[str]
+
+class QuickMatchResponse(BaseModel):
+    match_p: float
+    matched: List[str]
+    missing: List[str]
+    status: Optional[str] = None
+
 class RoadmapRequest(BaseModel):
     student_id: str
     user_skills: List[str]

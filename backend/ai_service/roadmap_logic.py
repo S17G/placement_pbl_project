@@ -92,6 +92,7 @@ INPUT DATA:
 - Matched Skills: {", ".join(analysis['matched'])}
 - Missing Skills: {", ".join(analysis['missing'])}
 - Real Interview Context: {context['questions']}
+- Real Resource Context: {context.get('resources', '')}
 
 STRICT RULES:
 1. For resources, generate REAL, working URLs from: Coursera (coursera.org), YouTube (youtube.com/results?search_query=...), GeeksForGeeks (geeksforgeeks.org), LeetCode (leetcode.com/tag/...), or freeCodeCamp (freecodecamp.org).
@@ -99,7 +100,8 @@ STRICT RULES:
 3. Each roadmap_block must have 3-5 tasks and 2-3 direct course resource URLs.
 4. Generate exactly 4 roadmap_blocks as sequential phases (Week 1-2, Week 3-4, Week 5-6, Week 7-8).
 5. For each skill_to_develop, provide specific actionable tasks (not generic advice).
-6. Respond ONLY with valid JSON, no markdown fences.
+6. For each skill in skills_to_develop, you MUST provide a direct 'resource_link'. Prioritize links from the 'Real Resource Context' (from placement_data_elite) if relevant. If none match, generate a valid YouTube/Coursera/Leetcode link.
+7. Respond ONLY with valid JSON, no markdown fences.
 
 OUTPUT FORMAT (JSON only, no extra text):
 {{
@@ -117,7 +119,8 @@ OUTPUT FORMAT (JSON only, no extra text):
       "skill": "Skill Name",
       "tag": "Critical",
       "est_days": 14,
-      "tasks": ["Specific task 1", "Specific task 2", "Practice task 3"]
+      "tasks": ["Specific task 1", "Specific task 2", "Practice task 3"],
+      "resource_link": "https://youtube.com/results?search_query=skill+name"
     }}
   ],
   "roadmap_blocks": [

@@ -25,15 +25,15 @@ const AI_BASE_URL = 'http://localhost:8000/api/v1'
 
 export default function SkillGapAuditPage() {
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState('company') // 'role' | 'company' | 'ctc'
   const [loading, setLoading] = useState(false)
-  const [metadata, setMetadata] = useState({ roles: [], companies: [], ctc_brackets: [] })
+  const [metadata, setMetadata] = useState({ roles: [], companies: [], ctc_brackets: [], mappings: [] })
   
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCompany, setSelectedCompany] = useState('')
+  const [selectedRole, setSelectedRole] = useState('')
+  const [selectedCTC, setSelectedCTC] = useState('')
+  
   const [studentSkills, setStudentSkills] = useState(['Java', 'Data Structures & Algorithms', 'OOP', 'HTML', 'CSS'])
   const [newSkill, setNewSkill] = useState('')
-  
-  const [selectedTarget, setSelectedTarget] = useState(null)
   const [analysisResult, setAnalysisResult] = useState(null)
   const [editableRoadmap, setEditableRoadmap] = useState([]) // editable copy of roadmap_blocks
   const [editingCell, setEditingCell] = useState(null) // { blockIdx, taskIdx } | null
@@ -44,6 +44,9 @@ export default function SkillGapAuditPage() {
   const [isChatLoading, setIsChatLoading] = useState(false)
   const [providerUsed, setProviderUsed] = useState('gemini') // 'gemini' | 'groq'
   const [isGroqFallback, setIsGroqFallback] = useState(false)
+
+  const [recommendedSkills, setRecommendedSkills] = useState([])
+  const [quickMatchData, setQuickMatchData] = useState(null)
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -56,7 +59,8 @@ export default function SkillGapAuditPage() {
       setMetadata({
         roles: resp.data.roles || [],
         companies: resp.data.companies || [],
-        ctc_brackets: resp.data.ctc_brackets || []
+        ctc_brackets: resp.data.ctc_brackets || [],
+        mappings: resp.data.mappings || []
       })
     } catch (err) {
       if (err.response && err.response.status === 503) {
@@ -69,20 +73,86 @@ export default function SkillGapAuditPage() {
     }
   }
 
-  // Filter items based on search and active tab
-  const filteredItems = useMemo(() => {
-    const query = searchQuery.toLowerCase()
-    if (activeTab === 'company') {
-      return metadata.companies.filter(c => c.toLowerCase().includes(query))
-    } else if (activeTab === 'role') {
-      return metadata.roles.filter(r => r.toLowerCase().includes(query))
-    } else if (activeTab === 'ctc') {
-      return metadata.ctc_brackets.filter(b => b.toLowerCase().includes(query))
-    }
-    return []
-  }, [metadata, activeTab, searchQuery])
+  // --- DERIVED STATE FOR DROPDOWNS ---
+  const mappings = metadata.mappings || []
 
-  const handleSelectTarget = async (item) => {
+  const availableCompanies = useMemo(() => {
+    if (!selectedRole && !selectedCTC) return metadata.companies
+    let filtered = mappings
+    if (selectedRole) filtered = filtered.filter(m => m.role === selectedRole)
+    if (selectedCTC) filtered = filtered.filter(m => m.ctc_bracket === selectedCTC)
+    return [...new Set(filtered.map(m => m.company))].sort()
+  }, [mappings, selectedRole, selectedCTC, metadata.companies])
+
+  const availableRoles = useMemo(() => {
+    if (!selectedCompany && !selectedCTC) return metadata.roles
+    let filtered = mappings
+    if (selectedCompany) filtered = filtered.filter(m => m.company === selectedCompany)
+    if (selectedCTC) filtered = filtered.filter(m => m.ctc_bracket === selectedCTC)
+    return [...new Set(filtered.map(m => m.role))].sort()
+  }, [mappings, selectedCompany, selectedCTC, metadata.roles])
+
+  const availableCTCs = useMemo(() => {
+    if (!selectedCompany && !selectedRole) return metadata.ctc_brackets
+    let filtered = mappings
+    if (selectedCompany) filtered = filtered.filter(m => m.company === selectedCompany)
+    if (selectedRole) filtered = filtered.filter(m => m.role === selectedRole)
+    return [...new Set(filtered.map(m => m.ctc_bracket))].sort()
+  }, [mappings, selectedCompany, selectedRole, metadata.ctc_brackets])
+
+  // Invalid selection cleanup
+  useEffect(() => {
+    if (selectedCompany && availableCompanies.length > 0 && !availableCompanies.includes(selectedCompany)) setSelectedCompany('')
+    if (selectedRole && availableRoles.length > 0 && !availableRoles.includes(selectedRole)) setSelectedRole('')
+    if (selectedCTC && availableCTCs.length > 0 && !availableCTCs.includes(selectedCTC)) setSelectedCTC('')
+  }, [selectedCompany, selectedRole, selectedCTC, availableCompanies, availableRoles, availableCTCs])
+
+  // Auto-selection when only 1 option remains
+  useEffect(() => {
+    if (availableCompanies.length === 1 && !selectedCompany) setSelectedCompany(availableCompanies[0])
+    if (availableRoles.length === 1 && !selectedRole) setSelectedRole(availableRoles[0])
+    if (availableCTCs.length === 1 && !selectedCTC) setSelectedCTC(availableCTCs[0])
+  }, [availableCompanies, availableRoles, availableCTCs, selectedCompany, selectedRole, selectedCTC])
+
+  const handleClearSelection = () => {
+    setSelectedCompany('')
+    setSelectedRole('')
+    setSelectedCTC('')
+  }
+
+  // Fetch suggested skills
+  useEffect(() => {
+    if (selectedRole && selectedCTC) {
+      axios.post(`${AI_BASE_URL}/recommend-skills`, {
+        role: selectedRole,
+        ctc_bracket: selectedCTC
+      }).then(res => {
+        setRecommendedSkills(res.data.recommended_skills || [])
+      }).catch(err => console.error(err))
+    } else {
+      setRecommendedSkills([])
+    }
+  }, [selectedRole, selectedCTC])
+
+  // Fetch quick match
+  useEffect(() => {
+    if (selectedCompany) {
+      axios.post(`${AI_BASE_URL}/quick-match`, {
+        company_name: selectedCompany,
+        user_skills: studentSkills
+      }).then(res => {
+        setQuickMatchData(res.data)
+      }).catch(err => console.error(err))
+    } else {
+      setQuickMatchData(null)
+    }
+  }, [selectedCompany, studentSkills])
+
+  const handleRunAnalysis = async () => {
+    if (!selectedCompany || !selectedRole || !selectedCTC) {
+      toast.error('Please select Company, Role, and CTC')
+      return
+    }
     setLoading(true)
     setIsGroqFallback(false) // reset on new request
     try {
@@ -90,9 +160,9 @@ export default function SkillGapAuditPage() {
       const payload = {
         student_id: studentId,
         user_skills: studentSkills,
-        target_role: activeTab === 'role' ? item : 'Software Development Engineer',
-        target_ctc_bracket: activeTab === 'ctc' ? item : 'Any',
-        target_company: activeTab === 'company' ? item : 'Any',
+        target_role: selectedRole,
+        target_ctc_bracket: selectedCTC,
+        target_company: selectedCompany,
         background: 'Computer Science' 
       }
       
@@ -113,7 +183,6 @@ export default function SkillGapAuditPage() {
           })
         }
         setAnalysisResult(resp.data)
-        setSelectedTarget(item)
         setEditableRoadmap(resp.data.roadmap_blocks || [])
       }
     } catch (err) {
@@ -201,81 +270,78 @@ export default function SkillGapAuditPage() {
   const BLOCK_NUM_BG = ['bg-orange-500/20 border-orange-500/30 text-orange-400', 'bg-blue-500/20 border-blue-500/30 text-blue-400', 'bg-violet-500/20 border-violet-500/30 text-violet-400', 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400']
 
   return (
-    <div className="relative min-h-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-[#0f172a] text-slate-200 font-sans">
       <Toaster position="top-right" />
       
       {/* Background Orbs */}
       <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-orange-500/10 blur-[128px] pointer-events-none" />
       <div className="absolute top-1/2 -left-24 h-64 w-64 rounded-full bg-amber-500/5 blur-[96px] pointer-events-none" />
 
-      <main className="relative z-10 flex h-screen overflow-hidden p-6 gap-6">
+      <main className="relative z-10 flex min-h-[112vh] p-6 gap-6">
         
         {/* LEFT PANE - Navigation & Selection */}
         <section className="w-80 flex flex-col gap-6 shrink-0">
           
-          {/* Tab Switcher */}
-          <div className="flex flex-col gap-2 rounded-3xl border border-slate-800 bg-slate-900/40 p-2 backdrop-blur-xl shadow-2xl">
-            <button 
-              onClick={() => { setActiveTab('role'); setSearchQuery(''); }}
-              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'role' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-slate-400 hover:bg-slate-800'}`}
-            >
-              <LayoutGrid className="h-5 w-5" />
-              <div className="text-left">
-                <p className="text-sm font-bold">By Job Role</p>
-                <p className="text-[10px] opacity-60">Match against a role</p>
-              </div>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('company'); setSearchQuery(''); }}
-              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'company' ? 'bg-orange-500/10 border border-orange-500/40 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'text-slate-400 hover:bg-slate-800'}`}
-            >
-              <Briefcase className="h-5 w-5" />
-              <div className="text-left">
-                <p className="text-sm font-bold">By Company</p>
-                <p className="text-[10px] opacity-60">Match against a company</p>
-              </div>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('ctc'); setSearchQuery(''); }}
-              className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${activeTab === 'ctc' ? 'bg-orange-500/10 border border-orange-500/40 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'text-slate-400 hover:bg-slate-800'}`}
-            >
-              <TrendingUp className="h-5 w-5" />
-              <div className="text-left">
-                <p className="text-sm font-bold">By Salary / CTC</p>
-                <p className="text-[10px] opacity-60">Fiter by pay bracket</p>
-              </div>
-            </button>
-          </div>
-
-          {/* Selection List */}
-          <div className="flex-1 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-5 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-slate-100 mb-4">Select target ({filteredItems.length})</h3>
-              <div className="relative group">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500 group-focus-within:text-orange-400" />
-                <input 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${activeTab}s...`}
-                  className="w-full rounded-2xl border border-slate-800 bg-slate-950/50 py-2.5 pl-10 pr-4 text-xs text-slate-200 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-              {filteredItems.map(item => (
+          {/* Form Selection */}
+          <div className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-xl shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-100 uppercase tracking-widest">Target Profile</h3>
+              {(selectedCompany || selectedRole || selectedCTC) && (
                 <button 
-                  key={item}
-                  onClick={() => handleSelectTarget(item)}
-                  className={`w-full group relative flex items-center gap-3 rounded-2xl border p-3 transition-all ${selectedTarget === item ? 'bg-orange-500/10 border-orange-500/40 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'bg-slate-950/30 border-slate-800/50 hover:bg-slate-800 hover:border-slate-700'}`}
+                  onClick={handleClearSelection}
+                  className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-orange-400 transition-colors flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded-lg"
                 >
-                  <div className={`h-8 w-8 shrink-0 flex items-center justify-center rounded-xl bg-slate-900 text-xs font-bold uppercase transition-colors ${selectedTarget === item ? 'text-orange-400 border border-orange-500/20' : 'text-slate-500'}`}>
-                    {activeTab === 'ctc' ? <TrendingUp className="h-4 w-4" /> : item[0]}
-                  </div>
-                  <span className={`text-[11px] font-bold truncate ${selectedTarget === item ? 'text-orange-200' : 'text-slate-300'}`}>{item}</span>
+                  <X className="h-3 w-3" /> Clear
                 </button>
-              ))}
+              )}
             </div>
+            
+            <div className="space-y-1 relative">
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Company</label>
+              <select 
+                value={selectedCompany} 
+                onChange={e => setSelectedCompany(e.target.value)}
+                className="w-full rounded-2xl border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-200 focus:border-orange-500/50 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="">Select a company...</option>
+                {availableCompanies.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronRight className="absolute right-4 top-[30px] h-4 w-4 text-slate-500 rotate-90 pointer-events-none" />
+            </div>
+
+            <div className="space-y-1 relative">
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Job Role</label>
+              <select 
+                value={selectedRole} 
+                onChange={e => setSelectedRole(e.target.value)}
+                className="w-full rounded-2xl border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-200 focus:border-orange-500/50 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="">Select a role...</option>
+                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <ChevronRight className="absolute right-4 top-[30px] h-4 w-4 text-slate-500 rotate-90 pointer-events-none" />
+            </div>
+
+            <div className="space-y-1 relative">
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Salary / CTC</label>
+              <select 
+                value={selectedCTC} 
+                onChange={e => setSelectedCTC(e.target.value)}
+                className="w-full rounded-2xl border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-200 focus:border-orange-500/50 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="">Select a CTC bracket...</option>
+                {availableCTCs.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronRight className="absolute right-4 top-[30px] h-4 w-4 text-slate-500 rotate-90 pointer-events-none" />
+            </div>
+
+            <button 
+              onClick={handleRunAnalysis}
+              disabled={!selectedCompany || !selectedRole || !selectedCTC || loading}
+              className="mt-2 w-full rounded-2xl bg-orange-500 py-3.5 text-[13px] font-black uppercase tracking-widest text-slate-950 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+            >
+              {loading ? 'Analyzing...' : 'Run Skill Gap Audit'}
+            </button>
           </div>
 
           {/* Your Skills Sidebar */}
@@ -284,7 +350,7 @@ export default function SkillGapAuditPage() {
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Your skills</h3>
               <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-bold">{studentSkills.length} skills</span>
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-4 max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5 mb-4 max-h-32 overflow-y-auto custom-scrollbar pr-2">
               {studentSkills.map(s => (
                 <span key={s} className="flex items-center gap-1 rounded-lg bg-slate-800/80 border border-slate-700/50 px-2.5 py-1 text-[10px] text-slate-300 transition hover:bg-slate-700">
                   {s} <X className="h-3 w-3 cursor-pointer hover:text-rose-400" onClick={() => removeSkill(s)} />
@@ -301,18 +367,72 @@ export default function SkillGapAuditPage() {
                 className="w-full rounded-xl border border-slate-800 bg-slate-950/50 py-2 pl-8 pr-3 text-[10px] text-slate-200 focus:border-orange-500/50 outline-none transition-all"
               />
             </div>
+
+            {recommendedSkills.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-800/50">
+                <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-3">Suggested for this role:</p>
+                <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 min-w-0">
+                  {recommendedSkills.filter(s => !studentSkills.some(us => us.toLowerCase() === s.toLowerCase())).map(s => (
+                    <button 
+                      key={s} 
+                      onClick={() => addSkill(s)}
+                      className="shrink-0 flex items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 text-[10px] text-orange-200 transition hover:bg-orange-500/20"
+                    >
+                      <Plus className="h-3 w-3" /> {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Required Skills & Quick Match Sidebar */}
+          {quickMatchData && (
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-xl shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Required skills</h3>
+                <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full font-bold">{quickMatchData.matched.length + quickMatchData.missing.length} required</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-6 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                {quickMatchData.matched.map(s => (
+                  <span key={s} className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-bold text-emerald-300">
+                    <CheckCircle2 className="h-3 w-3" /> {s}
+                  </span>
+                ))}
+                {quickMatchData.missing.map(s => (
+                  <span key={s} className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-2.5 py-1.5 text-[10px] font-bold text-slate-400">
+                    <X className="h-3 w-3 text-rose-500/70" /> {s}
+                  </span>
+                ))}
+              </div>
+
+              {/* Quick Match Progress */}
+              <div className="pt-4 border-t border-slate-800/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-[11px] font-bold text-slate-300">Quick match</h3>
+                  <span className="text-xl font-black text-slate-100">{Math.round(quickMatchData.match_p)}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-slate-800/80 overflow-hidden mb-3">
+                  <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{ width: `${quickMatchData.match_p}%` }} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20">{quickMatchData.matched.length} matched</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-rose-500/10 text-rose-400 px-2 py-1 rounded-lg border border-rose-500/20">{quickMatchData.missing.length} missing</span>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* RIGHT PANE - Analysis Result */}
-        <section className="flex-1 flex flex-col gap-6 overflow-hidden">
+        <section className="flex-1 flex flex-col gap-6 min-w-0">
           {analysisResult ? (
             <>
               {/* Header Box */}
-              <div className="rounded-[40px] border border-slate-800 bg-slate-900/50 p-10 backdrop-blur-3xl shadow-2xl">
+              <div className="w-full min-w-0 rounded-[40px] border border-slate-800 bg-slate-900/50 p-10 backdrop-blur-3xl shadow-2xl">
                 <div className="flex items-center justify-between mb-10 gap-10">
                   <div className="space-y-4">
-                    <h1 className="text-4xl font-extrabold text-slate-100">{selectedTarget}</h1>
+                    <h1 className="text-4xl font-extrabold text-slate-100">{analysisResult.company_name}</h1>
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-tighter text-orange-400 border border-orange-500/20">
                         Company analysis
@@ -349,37 +469,53 @@ export default function SkillGapAuditPage() {
                 </div>
 
                 {/* Skills Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-6">
+                <div className="flex flex-col gap-10 w-full min-w-0">
+                  <div className="space-y-6 w-full min-w-0">
                     <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
                       Skills you already have <span className="text-emerald-500 ml-2 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">✓ {analysisResult.matched_count}</span>
                     </h4>
-                    <div className="flex flex-wrap gap-2">
-                       {analysisResult.skills_already_have.map(s => (
-                         <span key={s} className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-200">
-                           {s}
-                         </span>
-                       ))}
+                    <div className="w-full overflow-x-auto custom-scrollbar pb-4">
+                      <div className="flex gap-3 w-max">
+                         {analysisResult.skills_already_have.map(s => (
+                           <span key={s} className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-200">
+                             {s}
+                           </span>
+                         ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-6 w-full min-w-0">
                     <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
                       Skills to develop <span className="text-rose-500 ml-2 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">⚠ {analysisResult.missing_count}</span>
                     </h4>
-                    <div className="space-y-3">
-                      {analysisResult.skills_to_develop.map(item => (
-                        <div key={item.skill} className="flex items-center justify-between rounded-2xl bg-slate-950/40 p-4 border border-slate-800/80 group hover:border-rose-500/30 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <span className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
-                            <span className="font-bold text-slate-200 group-hover:text-white transition-colors">{item.skill}</span>
+                    <div className="w-full overflow-x-auto custom-scrollbar pb-4">
+                      <div className="flex gap-4 w-max">
+                        {analysisResult.skills_to_develop.map(item => (
+                          <div key={item.skill} className="shrink-0 w-72 flex flex-col gap-3 rounded-2xl bg-slate-950/40 p-4 border border-slate-800/80 group hover:border-rose-500/30 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="h-2 w-2 shrink-0 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+                                <span className="font-bold text-slate-200 group-hover:text-white transition-colors">{item.skill}</span>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[9px] font-black text-orange-400 uppercase tracking-tight border border-orange-500/20">{item.tag || 'Critical'}</span>
+                                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><Clock className="h-3 w-3" /> ~{item.est_days || 14}d</span>
+                              </div>
+                            </div>
+                            {item.resource_link && (
+                              <a 
+                                href={item.resource_link} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="ml-6 flex items-center justify-center gap-2 text-[10px] font-bold text-blue-400 hover:text-blue-300 w-fit bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 transition-all hover:scale-105"
+                              >
+                                <BookOpen className="h-3 w-3" /> Study Resource <ExternalLink className="h-3 w-3 ml-1" />
+                              </a>
+                            )}
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[9px] font-black text-orange-400 uppercase tracking-tight border border-orange-500/20">{item.tag || 'Critical'}</span>
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><Clock className="h-3 w-3" /> ~{item.est_days || 14}d</span>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -535,7 +671,7 @@ export default function SkillGapAuditPage() {
                  <Search className="h-10 w-10 text-orange-500/40" />
                </div>
                <h2 className="text-2xl font-bold mb-4">Select a target to begin</h2>
-               <p className="text-slate-500 max-w-sm text-sm">Choose a job role or specific company from the left panel to run an instant skill gap audit against real PiCT data.</p>
+               <p className="text-slate-500 max-w-sm text-sm">Choose a company, job role, and CTC from the left panel to run an instant skill gap audit against real PiCT data.</p>
             </div>
           )}
         </section>
@@ -555,7 +691,8 @@ export default function SkillGapAuditPage() {
       {/* Global CSS for scrollbar */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+          width: 8px;
+          height: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;

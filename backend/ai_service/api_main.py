@@ -12,6 +12,8 @@ from api_schemas import (
     SkillDiscoveryRequest, 
     SkillRecommendationResponse, 
     CompanyListItem, 
+    QuickMatchRequest,
+    QuickMatchResponse,
     RoadmapRequest,
     AnalysisResponse,
     ChatRequest
@@ -110,6 +112,16 @@ async def list_companies(
     # Sort by match percentage
     results.sort(key=lambda x: x['match_p'], reverse=True)
     return results
+
+@app.post("/api/v1/quick-match", response_model=QuickMatchResponse)
+async def quick_match(req: QuickMatchRequest):
+    """Provides an instant skill match against a specific company without hitting LLM."""
+    comp_data = engine.get_company_by_name(req.company_name)
+    if not comp_data:
+        raise HTTPException(status_code=404, detail=f"Company '{req.company_name}' not found.")
+    
+    analysis = engine.compare_skills(req.user_skills, comp_data.get('skills_required', ''))
+    return analysis
 
 @app.post("/api/v1/generate-roadmap", response_model=AnalysisResponse)
 async def generate_roadmap(req: RoadmapRequest):
