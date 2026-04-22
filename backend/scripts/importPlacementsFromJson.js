@@ -57,6 +57,12 @@ function normalizePlacementEntries(rawEntries) {
       package: String(item.package || item.ctc || 'N/A').trim() || 'N/A',
       eligibility: String(item.eligibility || item.cgpa_criteria || '-').trim() || '-',
       process: String(item.process || item.activity || '-').trim() || '-',
+      ctc: String(item.ctc || item.package || '-').trim() || '-',
+      cgpa_criteria: String(item.cgpa_criteria || item.eligibility || '-').trim() || '-',
+      stipend: String(item.stipend || '-').trim() || '-',
+      activity: String(item.activity || item.process || '-').trim() || '-',
+      venue: String(item.venue || '-').trim() || '-',
+      skills_required: String(item.skills_required || item.role || '-').trim() || '-',
       createdAt: new Date(),
     }))
     .filter((item) => item.company && item.role)
@@ -86,21 +92,31 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
     }
   }
 
-  const existingKeys = new Set(
-    existing.map(
-      (row) =>
-        `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`,
-    ),
-  )
+  const indexByKey = new Map()
+  for (let idx = 0; idx < existing.length; idx += 1) {
+    const row = existing[idx]
+    const key = `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`
+    indexByKey.set(key, idx)
+  }
 
   let added = 0
+  let updated = 0
   for (const row of normalizedEntries) {
     const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
-    if (existingKeys.has(key)) {
+    const existingIndex = indexByKey.get(key)
+
+    if (existingIndex !== undefined) {
+      existing[existingIndex] = {
+        ...existing[existingIndex],
+        ...row,
+        _id: existing[existingIndex]._id,
+        createdAt: existing[existingIndex].createdAt || row.createdAt.toISOString(),
+      }
+      updated += 1
       continue
     }
 
-    existingKeys.add(key)
+    indexByKey.set(key, existing.length)
     existing.unshift({
       _id: new mongoose.Types.ObjectId().toString(),
       name: row.name,
@@ -117,6 +133,12 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
       package: row.package,
       eligibility: row.eligibility,
       process: row.process,
+      ctc: row.ctc,
+      cgpa_criteria: row.cgpa_criteria,
+      stipend: row.stipend,
+      activity: row.activity,
+      venue: row.venue,
+      skills_required: row.skills_required,
       createdAt: row.createdAt.toISOString(),
     })
     added += 1
@@ -124,36 +146,58 @@ function mergeIntoFallbackFile(fallbackFilePath, normalizedEntries) {
 
   fs.mkdirSync(path.dirname(fallbackFilePath), { recursive: true })
   fs.writeFileSync(fallbackFilePath, JSON.stringify(existing, null, 2), 'utf8')
-  return added
+  return { added, updated }
 }
 
 async function mergeIntoMongo(normalizedEntries) {
   await connectDatabase(env.mongodbUri, { enableInMemoryMongo: env.enableInMemoryMongo })
 
-  const existing = await PlacementRecord.find({}, 'company role date').lean()
-  const existingKeys = new Set(
-    existing.map(
-      (row) =>
-        `${String(row.company || '').toLowerCase()}|${String(row.role || '').toLowerCase()}|${String(row.date || '').toLowerCase()}`,
-    ),
-  )
+  const operations = normalizedEntries.map((row) => ({
+    updateOne: {
+      filter: {
+        company: row.company,
+        role: row.role,
+        date: row.date,
+      },
+      update: {
+        $set: {
+          name: row.name,
+          branch: row.branch,
+          batch: row.batch,
+          email: row.email,
+          views: row.views,
+          profile_pic: row.profile_pic,
+          uid: row.uid,
+          content_markdown: row.content_markdown,
+          package: row.package,
+          eligibility: row.eligibility,
+          process: row.process,
+          ctc: row.ctc,
+          cgpa_criteria: row.cgpa_criteria,
+          stipend: row.stipend,
+          activity: row.activity,
+          venue: row.venue,
+          skills_required: row.skills_required,
+        },
+        $setOnInsert: {
+          company: row.company,
+          role: row.role,
+          date: row.date,
+        },
+      },
+      upsert: true,
+    },
+  }))
 
-  const toInsert = normalizedEntries.filter((row) => {
-    const key = `${row.company.toLowerCase()}|${row.role.toLowerCase()}|${String(row.date).toLowerCase()}`
-    if (existingKeys.has(key)) {
-      return false
-    }
-
-    existingKeys.add(key)
-    return true
-  })
-
-  if (toInsert.length > 0) {
-    await PlacementRecord.insertMany(toInsert, { ordered: false })
-  }
+  const bulkResult = operations.length > 0
+    ? await PlacementRecord.bulkWrite(operations, { ordered: false })
+    : { upsertedCount: 0, modifiedCount: 0 }
 
   await disconnectDatabase()
-  return toInsert.length
+  return {
+    upserted: bulkResult.upsertedCount || 0,
+    modified: bulkResult.modifiedCount || 0,
+  }
 }
 
 async function main() {
@@ -172,13 +216,15 @@ async function main() {
   const normalizedEntries = normalizePlacementEntries(parsed)
 
   const fallbackFilePath = path.resolve(__dirname, '..', 'uploads', 'placements.json')
-  const fallbackAdded = mergeIntoFallbackFile(fallbackFilePath, normalizedEntries)
-  const mongoAdded = await mergeIntoMongo(normalizedEntries)
+  const fallbackResult = mergeIntoFallbackFile(fallbackFilePath, normalizedEntries)
+  const mongoResult = await mergeIntoMongo(normalizedEntries)
 
   console.log(`Source entries: ${Array.isArray(parsed) ? parsed.length : 0}`)
   console.log(`Normalized unique company-role entries: ${normalizedEntries.length}`)
-  console.log(`Added to fallback placements.json: ${fallbackAdded}`)
-  console.log(`Added to MongoDB placements: ${mongoAdded}`)
+  console.log(`Fallback placements added: ${fallbackResult.added}`)
+  console.log(`Fallback placements updated: ${fallbackResult.updated}`)
+  console.log(`Mongo placements upserted: ${mongoResult.upserted}`)
+  console.log(`Mongo placements modified: ${mongoResult.modified}`)
 }
 
 main().catch((error) => {

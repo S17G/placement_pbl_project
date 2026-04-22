@@ -104,7 +104,9 @@ function normalizeForUi(record) {
   normalized.cgpa_criteria = hasValue(normalized.cgpa_criteria)
     ? normalized.cgpa_criteria
     : normalized.eligibility
+  normalized.stipend = hasValue(normalized.stipend) ? normalized.stipend : '-'
   normalized.activity = hasValue(normalized.activity) ? normalized.activity : normalized.process
+  normalized.venue = hasValue(normalized.venue) ? normalized.venue : '-'
   normalized.skills_required = hasValue(normalized.skills_required)
     ? normalized.skills_required
     : normalized.role
