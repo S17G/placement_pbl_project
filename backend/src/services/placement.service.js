@@ -69,23 +69,73 @@ function readExternalImportedRecords() {
   }
 }
 
-function mergeUniqueRecords(...recordSets) {
-  const merged = []
-  const seen = new Set()
+function hasValue(value) {
+  if (value === undefined || value === null) {
+    return false
+  }
 
-  for (const records of recordSets) {
-    for (const record of records) {
-      const key = String(record._id || `${record.company || ''}|${record.role || ''}|${record.createdAt || ''}`)
-      if (!record.company || !record.role || seen.has(key)) {
-        continue
-      }
+  const normalized = String(value).trim()
+  return normalized.length > 0 && normalized !== '-'
+}
 
-      seen.add(key)
-      merged.push(record)
+function buildRecordKey(record) {
+  const company = String(record.company || '').trim().toLowerCase()
+  const role = String(record.role || '').trim().toLowerCase()
+  const date = String(record.date || '').trim().toLowerCase()
+  const fallbackDate = String(record.createdAt || '').trim().toLowerCase()
+
+  return `${company}|${role}|${date || fallbackDate}`
+}
+
+function mergeMissingFields(target, source) {
+  for (const [field, value] of Object.entries(source)) {
+    if (!hasValue(target[field]) && hasValue(value)) {
+      target[field] = value
     }
   }
 
-  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+  return target
+}
+
+function normalizeForUi(record) {
+  const normalized = { ...record }
+
+  normalized.ctc = hasValue(normalized.ctc) ? normalized.ctc : normalized.package
+  normalized.cgpa_criteria = hasValue(normalized.cgpa_criteria)
+    ? normalized.cgpa_criteria
+    : normalized.eligibility
+  normalized.activity = hasValue(normalized.activity) ? normalized.activity : normalized.process
+  normalized.skills_required = hasValue(normalized.skills_required)
+    ? normalized.skills_required
+    : normalized.role
+
+  return normalized
+}
+
+function mergeUniqueRecords(...recordSets) {
+  const mergedByKey = new Map()
+
+  for (const records of recordSets) {
+    for (const record of records) {
+      if (!record.company || !record.role) {
+        continue
+      }
+
+      const key = buildRecordKey(record)
+      const existing = mergedByKey.get(key)
+
+      if (!existing) {
+        mergedByKey.set(key, { ...record })
+        continue
+      }
+
+      mergedByKey.set(key, mergeMissingFields(existing, record))
+    }
+  }
+
+  return Array.from(mergedByKey.values())
+    .map(normalizeForUi)
+    .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0))
 }
 
 async function listPlacementRecords() {
