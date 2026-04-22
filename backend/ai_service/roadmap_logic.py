@@ -203,8 +203,10 @@ INSTRUCTION:
             print(f"[LLM] CRITICAL: All providers failed. {final_error}")
             return {"error": f"AI Engine failed. Details: {final_error}"}
         except Exception as e:
-            print(f"[ENGINE] CRASH: {str(e)}")
-            return {"error": f"Internal Engine Error: {str(e)}"}
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"[ENGINE] CRASH: {str(e)}\n{error_trace}")
+            return {"error": f"Internal Engine Error: {str(e)}", "trace": error_trace}
 
 if __name__ == "__main__":
     gen = RoadmapGenerator()
