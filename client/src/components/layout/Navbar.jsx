@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Briefcase, FileText, HelpCircle, Home, MessageCircle, Map, ShieldCheck, User, ClipboardList, Search } from 'lucide-react'
+import { BarChart3, Briefcase, FileText, HelpCircle, Home, MessageCircle, Map, User, ClipboardList, Search } from 'lucide-react'
 import http from '../../api/http'
 
 const TAB_SEEN_AT_KEY = 'pmStudentTabSeenAt'
@@ -52,14 +52,13 @@ function Navbar({ isSidebarOpen, onCloseSidebar }) {
 
   const STUDENT_NAV_LINKS = [
     { to: '/dashboard', label: 'Dashboard', icon: Home },
+    { to: '/placements', label: 'Placements', icon: Briefcase },
+    { to: '/internships', label: 'Internships', icon: Map },
     { to: '/discussion', label: 'Discussion', icon: MessageCircle },
     { to: '/faq', label: 'FAQ', icon: HelpCircle },
     { to: '/resumes', label: 'Resume Library', icon: FileText },
     { to: '/applications', label: 'Applications', icon: ClipboardList },
-    { to: '/roadmaps', label: 'Roadmaps', icon: Map },
-    { to: '/internships', label: 'Internships', icon: Briefcase },
-    { to: '/placements', label: 'Placements', icon: BarChart3 },
-    { to: '/readiness', label: 'Readiness Check', icon: ShieldCheck },
+    { to: '/analytics', label: 'Placement Analytics', icon: BarChart3 },
     { to: '/skill-gap-audit', label: 'Skill Gap Audit', icon: Search },
   ]
 

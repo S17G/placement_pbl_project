@@ -1,5 +1,16 @@
 [
   {
+    "_id": "602982cb-ca62-4d57-969a-a98615342ad8",
+    "userId": "69e7b63a2bfa9662ec6d381d",
+    "companyName": "Mastercard",
+    "role": "SDE Intern",
+    "status": "Interview",
+    "dateApplied": "2024-02-10",
+    "notes": "",
+    "createdAt": "2026-04-23T01:54:08.039Z",
+    "updatedAt": "2026-04-23T01:54:08.039Z"
+  },
+  {
     "_id": "3e1ff4e5-0797-4eb9-b7cd-00e7fc2a2bad",
     "userId": "69d783d08d91c229e88afbfd",
     "companyName": "Siemens",

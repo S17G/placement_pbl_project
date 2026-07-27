@@ -14,12 +14,6 @@ try:
 except ImportError:
     NVIDIA_AVAILABLE = False
 
-try:
-    from groq import Groq
-    GROQ_AVAILABLE = True
-except ImportError:
-    GROQ_AVAILABLE = False
-
 load_dotenv()
 
 # Rate-limit/Error signals to trigger fallback
@@ -35,14 +29,8 @@ class RoadmapGenerator:
                 base_url="https://integrate.api.nvidia.com/v1",
                 api_key=self.nvidia_api_key
             )
-        self.nvidia_model_id = "mistralai/mistral-small-4-119b-2603"
+        self.nvidia_model_id = "mistralai/mistral-small-4-119b-2603" 
 
-        # --- Groq setup (Fallback 1) ---
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
-        self.groq_client = None
-        if GROQ_AVAILABLE and self.groq_api_key:
-            self.groq_client = Groq(api_key=self.groq_api_key)
-        self.groq_model_id = "gemma2-9b-it"
 
         # --- Gemini setup (Fallback 2) ---
         self.gemini_api_key = api_key or os.getenv("GEMINI_API_KEY")
@@ -53,18 +41,6 @@ class RoadmapGenerator:
 
         self.engine = engine or SkillGapEngine()
 
-    def _safe_notna(self, val):
-        """Safely check if a value is not NA, handling numpy arrays."""
-        try:
-            if val is None:
-                return False
-            import numpy as np
-            if isinstance(val, np.ndarray):
-                return val.size > 0
-            return bool(pd.notna(val))
-        except (ValueError, TypeError):
-            return val is not None
-
     def get_context_for_role(self, role_filter):
         """Extract real interview questions and resources for the selected role."""
         if self.engine.kaggle_df.empty:
@@ -74,12 +50,11 @@ class RoadmapGenerator:
         questions = []
         resources = []
         for _, row in kag_data.iterrows():
-            q_val = row.get('questions_all')
-            if self._safe_notna(q_val):
-                questions.append(f"Q: {q_val}")
+            if row.get('questions_all') is not None and not (isinstance(row.get('questions_all'), float) and pd.isna(row.get('questions_all'))):
+                questions.append(f"Q: {row['questions_all']}")
             
             res = row.get('resource_links', row.get('resource links'))
-            if self._safe_notna(res):
+            if res is not None and not (isinstance(res, float) and pd.isna(res)):
                 if isinstance(res, list):
                     resources.extend([str(r).strip() for r in res if r])
                 else:
@@ -101,57 +76,68 @@ INPUT:
 - Role: {target_role} | CTC: {target_ctc_bracket}
 - Current Skills: {", ".join(user_skills)}
 - Missing: {", ".join(analysis['missing'])}
-- Verified Database Resources: {context['resources'] if len(str(context['resources'])) > 5 else 'NONE FOUND IN DB'}
+- Verified Database Resources: {context['resources'] if context['resources'] else 'NONE FOUND IN DB'}
 - Real Questions: {context['questions']}
 
 INSTRUCTION:
 1. Use "Verified Database Resources" if provided. 
 2. If "NONE FOUND IN DB", you MUST generate your own curated list of high-quality learning resources (YouTube, docs) for the missing skills.
-3. Return ONLY a valid JSON object with: company_name, match_percentage, matched_count, missing_count, priority_skill, estimated_preparation_days, analysis_summary, readiness_status, skills_already_have, skills_to_develop, roadmap_blocks.
+3. Return ONLY a valid JSON object with the following schema:
+{{
+  "company_name": "{target_company_display}",
+  "match_percentage": float,
+  "matched_count": int,
+  "missing_count": int,
+  "priority_skill": "string (the most critical missing skill)",
+  "estimated_preparation_days": int,
+  "analysis_summary": "string (brief overview)",
+  "readiness_status": "string (e.g., 'Ready', 'Partially Ready', 'Needs Focus')",
+  "skills_already_have": ["skill1", "skill2"],
+  "skills_to_develop": [
+    {{ "skill": "string", "tag": "Critical/Recommended", "est_days": int, "resource_link": "URL" }}
+  ],
+  "roadmap_blocks": [
+    {{
+      "title": "Phase Title",
+      "skills_covered": ["skill1", "skill2"],
+      "tasks": ["Detailed task description", "Another task"],
+      "resources": [
+        {{ "label": "Resource Name", "url": "URL", "type": "course/video/practice" }}
+      ]
+    }}
+  ]
+}}
 """
 
-    def _parse_json(self, content: str) -> dict:
-        """Safely parse JSON, stripping markdown code blocks if present."""
-        text = content.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        elif text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        return json.loads(text.strip())
+    def _clean_json(self, text: str) -> dict:
+        """Strips markdown code blocks and parses JSON."""
+        # Remove markdown code blocks if present
+        clean_text = re.sub(r"```json\s*|\s*```", "", text, flags=re.IGNORECASE).strip()
+        # Fallback for just ``` blocks
+        clean_text = re.sub(r"```\s*|\s*```", "", clean_text, flags=re.IGNORECASE).strip()
+        try:
+            return json.loads(clean_text)
+        except json.JSONDecodeError:
+            # If still failing, try to find the first '{' and last '}'
+            match = re.search(r"(\{.*\})", clean_text, re.DOTALL)
+            if match:
+                return json.loads(match.group(1))
+            raise
 
     def _call_nvidia(self, prompt: str) -> dict:
         if not self.nvidia_client: raise RuntimeError("NVIDIA Not Configured")
         
-        # Using the specific Mistral model requested by the user
-        models = ["mistralai/mistral-small-4-119b-2603"]
-        last_err = None
-        for model in models:
-            try:
-                print(f"  [NVIDIA] Trying model: {model}...")
-                completion = self.nvidia_client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.1,
-                    response_format={"type": "json_object"},
-                )
-                return self._parse_json(completion.choices[0].message.content)
-            except Exception as e:
-                last_err = e
-                print(f"  [NVIDIA] Model {model} failed: {str(e)}")
-                continue
-        raise last_err
-
-    def _call_groq(self, prompt: str) -> dict:
-        if not self.groq_client: raise RuntimeError("Groq Not Configured")
-        completion = self.groq_client.chat.completions.create(
-            model=self.groq_model_id,
+        print(f"  [NVIDIA] Using model: {self.nvidia_model_id}...")
+        completion = self.nvidia_client.chat.completions.create(
+            model=self.nvidia_model_id,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
+            max_tokens=16384,
+            extra_body={"reasoning_effort": "high"},
             response_format={"type": "json_object"},
         )
-        return self._parse_json(completion.choices[0].message.content)
+        return self._clean_json(completion.choices[0].message.content)
+
 
     def _call_gemini(self, prompt: str) -> dict:
         if not self.gemini_client: raise RuntimeError("Gemini Not Configured")
@@ -163,7 +149,7 @@ INSTRUCTION:
                 temperature=0.1
             )
         )
-        return json.loads(response.text)
+        return self._clean_json(response.text)
 
     def generate_roadmap(self, user_skills, target_role, target_ctc_bracket,
                          target_company=None, student_background=None):
@@ -186,10 +172,6 @@ INSTRUCTION:
                 target_jd_skills = company_list[0]['skills_required']
                 target_company = company_list[0]['company_name']
 
-            # DEBUG: Check types to catch ambiguous Pandas objects
-            print(f">> DEBUG: target_company type: {type(target_company)}")
-            print(f">> DEBUG: target_jd_skills type: {type(target_jd_skills)}")
-
             analysis = self.engine.compare_skills(user_skills, target_jd_skills)
             context = self.get_context_for_role(target_role)
 
@@ -198,10 +180,9 @@ INSTRUCTION:
                 target_company, analysis, context
             )
 
-            # 2. THE NVIDIA-FIRST CHAIN
+            # THE NVIDIA-FIRST CHAIN (Gemini Fallback)
             providers = [
                 ("NVIDIA", self._call_nvidia),
-                ("GROQ", self._call_groq),
                 ("GEMINI", self._call_gemini)
             ]
 
@@ -214,7 +195,7 @@ INSTRUCTION:
                     if not isinstance(result, dict):
                         raise ValueError(f"{name} returned non-dictionary response")
                     
-                    result["_provider"] = name.lower()
+                    result["provider"] = name.lower()
                     print(f"[LLM] SUCCESS: {name} generated the roadmap.")
                     return result
                 except Exception as e:
@@ -227,15 +208,8 @@ INSTRUCTION:
             print(f"[LLM] CRITICAL: All providers failed. {final_error}")
             return {"error": f"AI Engine failed. Details: {final_error}"}
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
-            print("\n" + "="*50)
-            print("🚨 CRITICAL ENGINE CRASH 🚨")
-            print(f"Error: {str(e)}")
-            print("-" * 50)
-            print(error_trace)
-            print("="*50 + "\n")
-            return {"error": f"Internal Engine Error: {str(e)}", "trace": error_trace}
+            print(f"[ENGINE] CRASH: {str(e)}")
+            return {"error": f"Internal Engine Error: {str(e)}"}
 
 if __name__ == "__main__":
     gen = RoadmapGenerator()

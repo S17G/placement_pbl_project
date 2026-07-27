@@ -252,7 +252,7 @@ function FaqPage() {
               ) : (
                 <>
                   <h2 className="text-base font-semibold text-slate-100 sm:text-lg">{faq.question}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">{faq.answer}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300 whitespace-pre-wrap sm:text-base">{faq.answer}</p>
                 </>
               )}
               <div className="mt-3 space-y-1 text-xs text-slate-400 sm:text-sm">

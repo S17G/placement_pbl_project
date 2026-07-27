@@ -8,9 +8,8 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import PlacementDashboardPage from './pages/PlacementDashboardPage'
 import InternshipDashboardPage from './pages/InternshipDashboardPage'
-import PlacementReadinessPage from './pages/PlacementReadinessPage'
 import ApplicationTrackerPage from './pages/ApplicationTrackerPage'
-import RoadmapGeneratorPage from './pages/RoadmapGeneratorPage'
+import PlacementAnalyticsPage from './pages/PlacementAnalyticsPage'
 import RegisterPage from './pages/RegisterPage'
 import ResumeLibraryPage from './pages/ResumeLibraryPage'
 import ProfilePage from './pages/ProfilePage'
@@ -141,18 +140,10 @@ function App() {
           }
         />
         <Route
-          path="/roadmaps"
+          path="/analytics"
           element={
             <ProtectedRoute allowedRole="student">
-              <RoadmapGeneratorPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/readiness"
-          element={
-            <ProtectedRoute allowedRole="student">
-              <PlacementReadinessPage />
+              <PlacementAnalyticsPage />
             </ProtectedRoute>
           }
         />

@@ -1,0 +1,149 @@
+﻿
+> client@0.0.0 lint
+> eslint .
+
+
+E:\college\PBL\work\placement_pbl_project\client\src\components\layout\Navbar.jsx
+   33:10  error  'isProfileOpen' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  139:10  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  137 |     }
+  138 |
+> 139 |     void refreshStudentTabBadges()
+      |          ^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  140 |
+  141 |     const intervalId = window.setInterval(() => {
+  142 |       void refreshStudentTabBadges()  react-hooks/set-state-in-effect
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\AdminDashboardPage.jsx
+  43:10  error  Error: Cannot access variable before it is declared
+
+`refreshPlacements` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  41 |
+  42 |   useEffect(() => {
+> 43 |     void refreshPlacements()
+     |          ^^^^^^^^^^^^^^^^^ `refreshPlacements` accessed before it is declared
+  44 |     void refreshInternships()
+  45 |     void refreshRequests()
+  46 |   }, [])
+
+  56 |   }
+  57 |
+> 58 |   const refreshPlacements = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     try {
+     | ^^^^^^^^^
+> 60 |       const response = await http.get('/v1/placements')
+     | ^^^^^^^^^
+> 61 |       setPlacements(response.data?.data || [])
+     | ^^^^^^^^^
+> 62 |     } catch (error) {
+     | ^^^^^^^^^
+> 63 |       toast.error(error?.response?.data?.message || 'Unable to fetch placement records.')
+     | ^^^^^^^^^
+> 64 |     }
+     | ^^^^^^^^^
+> 65 |   }
+     | ^^^^ `refreshPlacements` is declared here
+  66 |
+  67 |   const refreshInternships = async () => {
+  68 |     try {                                            react-hooks/immutability
+  44:10  error  Error: Cannot access variable before it is declared
+
+`refreshInternships` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  42 |   useEffect(() => {
+  43 |     void refreshPlacements()
+> 44 |     void refreshInternships()
+     |          ^^^^^^^^^^^^^^^^^^ `refreshInternships` accessed before it is declared
+  45 |     void refreshRequests()
+  46 |   }, [])
+  47 |
+
+  65 |   }
+  66 |
+> 67 |   const refreshInternships = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 68 |     try {
+     | ^^^^^^^^^
+> 69 |       const response = await http.get('/v1/internships')
+     | ^^^^^^^^^
+> 70 |       setInternships(response.data?.data || [])
+     | ^^^^^^^^^
+> 71 |     } catch (error) {
+     | ^^^^^^^^^
+> 72 |       toast.error(error?.response?.data?.message || 'Unable to fetch internship records.')
+     | ^^^^^^^^^
+> 73 |     }
+     | ^^^^^^^^^
+> 74 |   }
+     | ^^^^ `refreshInternships` is declared here
+  75 |
+  76 |   const refreshRequests = async () => {
+  77 |     try {                                      react-hooks/immutability
+  45:10  error  Error: Cannot access variable before it is declared
+
+`refreshRequests` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  43 |     void refreshPlacements()
+  44 |     void refreshInternships()
+> 45 |     void refreshRequests()
+     |          ^^^^^^^^^^^^^^^ `refreshRequests` accessed before it is declared
+  46 |   }, [])
+  47 |
+  48 |   const resetPlacementForm = () => {
+
+  74 |   }
+  75 |
+> 76 |   const refreshRequests = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 77 |     try {
+     | ^^^^^^^^^
+> 78 |       const response = await http.get('/v1/admin/registration-requests')
+     | ^^^^^^^^^
+> 79 |       setRequests(response.data?.data || [])
+     | ^^^^^^^^^
+> 80 |     } catch (error) {
+     | ^^^^^^^^^
+> 81 |       toast.error(error?.response?.data?.message || 'Unable to fetch registration requests.')
+     | ^^^^^^^^^
+> 82 |     }
+     | ^^^^^^^^^
+> 83 |   }
+     | ^^^^ `refreshRequests` is declared here
+  84 |
+  85 |   const refreshUsers = async (searchValue = userSearch) => {
+  86 |     try {  react-hooks/immutability
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\DiscussionPage.jsx
+  34:6  warning  React Hook useEffect has a missing dependency: 'refreshPosts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\FaqPage.jsx
+  36:6  warning  React Hook useEffect has a missing dependency: 'refreshFaqs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\ResumeLibraryPage.jsx
+  23:6  warning  React Hook useEffect has a missing dependency: 'refreshResumes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\RoadmapGeneratorPage.jsx
+   29:18  error  'error' is defined but never used  no-unused-vars
+  121:18  error  'error' is defined but never used  no-unused-vars
+  136:18  error  'error' is defined but never used  no-unused-vars
+
+E:\college\PBL\work\placement_pbl_project\client\src\pages\SkillGapAuditPage.jsx
+   45:10  error    'providerUsed' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                      no-unused-vars
+   46:10  error    'isGroqFallback' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                    no-unused-vars
+   54:6   warning  React Hook useEffect has a missing dependency: 'fetchMetadata'. Either include it or remove the dependency array                                                                                  react-hooks/exhaustive-deps
+   77:9   warning  The 'mappings' logical expression could make the dependencies of useMemo Hook (at line 85) change on every render. To fix this, wrap the initialization of 'mappings' in its own useMemo() Hook   react-hooks/exhaustive-deps
+   77:9   warning  The 'mappings' logical expression could make the dependencies of useMemo Hook (at line 93) change on every render. To fix this, wrap the initialization of 'mappings' in its own useMemo() Hook   react-hooks/exhaustive-deps
+   77:9   warning  The 'mappings' logical expression could make the dependencies of useMemo Hook (at line 101) change on every render. To fix this, wrap the initialization of 'mappings' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  210:14  error    'err' is defined but never used                                                                                                                                                                   no-unused-vars
+
+Γ£û 18 problems (11 errors, 7 warnings)
+

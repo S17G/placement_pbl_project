@@ -130,6 +130,7 @@ function DashboardPage() {
       actions: [
         { label: 'Resume Library', description: 'Compare and learn from shared resumes.', to: '/resumes' },
         { label: 'Placement Records', description: 'Track eligibility and company process.', to: '/placements' },
+        { label: 'Internship Records', description: 'Explore internship opportunities.', to: '/internships' },
       ],
     },
     execute: {
@@ -137,7 +138,6 @@ function DashboardPage() {
       subtitle: 'Move from preparation to action with practical readiness steps.',
       tone: 'from-orange-500 to-amber-400',
       actions: [
-        { label: 'Readiness Check', description: 'Run your current readiness assessment.', to: '/readiness' },
         { label: 'Application Tracker', description: 'Manage applications and follow-ups.', to: '/applications' },
       ],
     },

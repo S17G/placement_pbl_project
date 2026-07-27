@@ -21,7 +21,7 @@ import {
 import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast'
 
-const AI_BASE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000/api/v1'
+const AI_BASE_URL = 'http://localhost:8000/api/v1'
 
 export default function SkillGapAuditPage() {
   // --- STATE ---
@@ -42,11 +42,11 @@ export default function SkillGapAuditPage() {
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState([])
   const [isChatLoading, setIsChatLoading] = useState(false)
-  const [providerUsed, setProviderUsed] = useState('gemini') // 'gemini' | 'groq'
-  const [isGroqFallback, setIsGroqFallback] = useState(false)
 
   const [recommendedSkills, setRecommendedSkills] = useState([])
   const [quickMatchData, setQuickMatchData] = useState(null)
+  const [isGeminiFallback, setIsGeminiFallback] = useState(false)
+  const [providerUsed, setProviderUsed] = useState('gemini')
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function SkillGapAuditPage() {
       return
     }
     setLoading(true)
-    setIsGroqFallback(false) // reset on new request
+    setIsGeminiFallback(false) // reset on new request
     try {
       const studentId = JSON.parse(sessionStorage.getItem('pmCurrentUser') || '{}').email || 'guest'
       const payload = {
@@ -172,10 +172,10 @@ export default function SkillGapAuditPage() {
         toast.error(resp.data.error)
       } else {
         // Detect if Groq fallback was used
-        const provider = resp.data._provider || 'gemini'
+        const provider = resp.data.provider || 'gemini'
         setProviderUsed(provider)
-        if (provider === 'groq') {
-          setIsGroqFallback(true)
+        if (provider === 'gemini') {
+          setIsGeminiFallback(true)
           toast.success('Analysis complete! Your personalized roadmap is ready.', {
             id: 'analysis-success',
             icon: '🎯',
@@ -207,7 +207,7 @@ export default function SkillGapAuditPage() {
         message: msg
       })
       setChatHistory(prev => [...prev, { role: 'assistant', content: resp.data.response }])
-    } catch (err) {
+    } catch (_err) {
       toast.error('Chat context failed')
     } finally {
       setIsChatLoading(false)

@@ -26,7 +26,7 @@ const RoadmapGeneratorPage = () => {
             setLoading(true);
             const response = await http.get('/v1/roadmaps');
             setRoadmaps(response.data.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to fetch roadmaps');
         } finally {
             setLoading(false);

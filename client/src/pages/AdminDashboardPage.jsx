@@ -39,11 +39,7 @@ function AdminDashboardPage() {
   const [internshipForm, setInternshipForm] = useState(initialInternshipForm)
   const pendingRequestsCount = requests.filter((request) => request.status === 'pending').length
 
-  useEffect(() => {
-    void refreshPlacements()
-    void refreshInternships()
-    void refreshRequests()
-  }, [])
+
 
   const resetPlacementForm = () => {
     setPlacementForm(initialPlacementForm)
@@ -92,6 +88,12 @@ function AdminDashboardPage() {
       toast.error(error?.response?.data?.message || 'Unable to fetch users.')
     }
   }
+
+  useEffect(() => {
+    void refreshPlacements()
+    void refreshInternships()
+    void refreshRequests()
+  }, [])
 
   const handlePlacementInput = (event) => {
     const { name, value } = event.target

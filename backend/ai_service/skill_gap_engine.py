@@ -22,7 +22,7 @@ class SkillGapEngine:
         self.clean_data()
 
     def _parse_ctc(self, ctc_str):
-        if pd.isna(ctc_str) or ctc_str == '-':
+        if ctc_str is None or (isinstance(ctc_str, float) and pd.isna(ctc_str)) or ctc_str == '-':
             return 0.0
         # Extract digits and decimal point
         matches = re.findall(r'(\d+\.?\d*)', str(ctc_str))
@@ -72,7 +72,7 @@ class SkillGapEngine:
         }
 
         def get_canonical_role(role):
-            if pd.isna(role): return "Software Development Engineer"
+            if role is None or (isinstance(role, float) and pd.isna(role)): return "Software Development Engineer"
             r_str = str(role).strip()
             # 1. Exact map match
             if r_str in self.role_map:
@@ -84,7 +84,7 @@ class SkillGapEngine:
             return r_str.title()
 
         def clean_company_name(name):
-            if pd.isna(name): return name
+            if name is None or (isinstance(name, float) and pd.isna(name)): return name
             name = str(name).strip()
             # 1. Exact map match
             if name in self.company_map:
@@ -108,7 +108,7 @@ class SkillGapEngine:
 
     def get_extended_metadata(self):
         """Returns all deduplicated roles, companies, and detailed mapping relationships."""
-        if hasattr(self, 'cached_metadata') and self.cached_metadata is not None:
+        if hasattr(self, 'cached_metadata') and self.cached_metadata:
             return self.cached_metadata
 
         raw_roles = list(set(
@@ -196,7 +196,8 @@ class SkillGapEngine:
         return None
 
     def compare_skills(self, user_skills, target_skills_str):
-        if target_skills_str is None or str(target_skills_str).strip() == "":
+        # Safe check for empty/null target_skills_str
+        if target_skills_str is None or (isinstance(target_skills_str, float) and pd.isna(target_skills_str)) or not str(target_skills_str).strip():
             return {"match_p": 100, "matched": [], "missing": []}
             
         # Handle if target_skills_str is already a list
@@ -208,4 +209,4 @@ class SkillGapEngine:
         user_skills_lower = [str(s).strip().lower() for s in user_skills]
         matched = [ts for ts in target_skills if any(us in ts or ts in us for us in user_skills_lower)]
         missing = [ts for ts in target_skills if ts not in matched]
-        return {"match_p": round((len(matched)/len(target_skills))*100, 2) if len(target_skills) > 0 else 0, "matched": matched, "missing": missing}
+        return {"match_p": round((len(matched)/len(target_skills))*100, 2) if target_skills else 0, "matched": matched, "missing": missing}

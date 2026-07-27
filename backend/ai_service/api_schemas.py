@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 
 class SkillDiscoveryRequest(BaseModel):
     role: str
@@ -49,6 +49,7 @@ class AnalysisResponse(BaseModel):
     estimated_preparation_days: int
     analysis_summary: str
     readiness_status: str
-    skills_already_have: List[Any]
-    skills_to_develop: List[Any]
-    roadmap_blocks: List[Any]
+    skills_already_have: List[str]
+    skills_to_develop: List[Dict]
+    roadmap_blocks: List[Dict]
+    provider: Optional[str] = None # Capture which AI was used

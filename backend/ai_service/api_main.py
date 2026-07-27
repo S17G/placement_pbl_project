@@ -157,6 +157,9 @@ async def chat_with_assistant(req: ChatRequest):
 
     try:
         # We can use the generator's gemini_client for chat
+        if not generator.gemini_client:
+            raise HTTPException(status_code=503, detail="Gemini service not configured for chat fallback.")
+            
         response = generator.gemini_client.models.generate_content(
             model=generator.gemini_model_id,
             contents=prompt
